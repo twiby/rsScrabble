@@ -12,12 +12,11 @@ where P: AsRef<Path>, {
 
 pub fn cnt_lines<P>(filename: P) -> io::Result<u32>
 where P: AsRef<Path>, {
-    let file = io::BufReader::new(File::open(filename).expect("Unable to open file"));
+    let file = File::open(filename)?;
+
     let mut cnt:u32 = 0;
-    
-    for _ in file.lines() {
+    for _ in io::BufReader::new(file).lines() {
         cnt = cnt + 1;
     }
-    
     return Ok(cnt);
 }

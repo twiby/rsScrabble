@@ -18,16 +18,6 @@ impl StrTree {
 			children: Vec::new()};
 	}
 
-	//// TO REMOVE
-	pub fn check_child(&self, c: char) -> bool {
-		for child in &self.children {
-			if child.data == Some(c) {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	fn get_child_idx(&self, c: char) -> Option<usize> {
 		for i in 0..self.children.len() {
 			if self.children[i].data == Some(c) {
@@ -83,6 +73,20 @@ impl StrTree {
 			letter_idx += 1;
 		}
 		node.is_word = true;
+	}
+
+	pub fn is_word(&self, word: &str) -> bool {
+		let mut letter_idx: usize = 0;
+		let mut node = self;
+		while let Some(c) = word.chars().nth(letter_idx) {
+			if let Some(child) = node.get_child(c) {
+				node = child;
+			} else {
+				return false;
+			}
+			letter_idx += 1;
+		}
+		return node.is_word;
 	}
 
 	// The output is wrapped in a Result to allow matching on errors

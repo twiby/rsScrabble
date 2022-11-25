@@ -1,3 +1,6 @@
+mod read_file;
+pub use read_file::read_lines;
+
 
 pub struct StrTree {
 	data: Option<char>,
@@ -34,6 +37,7 @@ impl StrTree {
 		return None;
 	}
 
+	#[allow(dead_code)]
 	pub fn get_child<'a>(&'a self, c: char) -> Option<&'a StrTree> {
 		if let Some(i) = self.get_child_idx(c) {
 			return Some(&self.children[i]);
@@ -41,6 +45,7 @@ impl StrTree {
 			return None;
 		}
 	}
+	#[allow(dead_code)]
 	fn get_child_mut<'a>(&'a mut self, c: char) -> Option<&'a mut StrTree> {
 		if let Some(i) = self.get_child_idx(c) {
 			return Some(&mut self.children[i]);
@@ -78,6 +83,28 @@ impl StrTree {
 			letter_idx += 1;
 		}
 		node.is_word = true;
+	}
+
+	// The output is wrapped in a Result to allow matching on errors
+	// Returns an Iterator to the Reader of the lines of the file.
+	pub fn fill_with_file<P>(&mut self, filename: P) -> Option<u32>
+	where P: AsRef<std::path::Path>, {
+		if let Ok(reader) = read_lines(filename) {
+			println!("File found");
+
+			let mut nb_errors:u32 = 0;
+			for line in reader.take(3) {
+				if let Ok(word) = line {
+					println!("{}", word);
+				} else {
+					nb_errors += 1;
+				}
+			}
+
+			return Some(nb_errors);
+		} else {
+			return None;
+		}
 	}
 }
 

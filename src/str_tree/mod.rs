@@ -1,5 +1,6 @@
 mod read_file;
-pub use read_file::read_lines;
+use read_file::read_lines;
+use read_file::cnt_lines;
 
 
 pub struct StrTree {
@@ -53,7 +54,6 @@ impl StrTree {
 	}
 
 	fn add_child<'a>(&'a mut self, c: char) -> &'a mut StrTree {
-		println!("Creating child {} for parent {:?}", c, self.data);
 		let new_tree = StrTree{
 			data: Some(c),
 			nb_letters: self.nb_letters + 1,
@@ -64,7 +64,7 @@ impl StrTree {
 		return self.children.last_mut().unwrap();
 	}
 
-	pub fn add_word(&mut self, word: &str) {
+	fn add_word(&mut self, word: &str) {
 		let mut letter_idx: usize = 0;
 		let mut node = self;
 
@@ -93,22 +93,25 @@ impl StrTree {
 	// Returns an Iterator to the Reader of the lines of the file.
 	pub fn fill_with_file<P>(&mut self, filename: P) -> Option<u32>
 	where P: AsRef<std::path::Path>, {
-		if let Ok(reader) = read_lines(filename) {
-			println!("File found");
+		let nb_lines:u32;
+		match cnt_lines(&filename) {
+			Err(e) => {println!("error parsing file: {e:?}"); return None}
+			Ok(n) => {nb_lines = n; println!("reading {} words from file", nb_lines)}
+		};
 
-			let mut nb_errors:u32 = 0;
-			for line in reader.take(3) {
-				if let Ok(word) = line {
-					println!("{}", word);
-				} else {
-					nb_errors += 1;
-				}
+
+		let reader = read_lines(&filename).expect("cannot read file.");
+
+		let mut nb_words:u32 = 0;
+		for line in reader {
+			if let Ok(word) = line {
+				self.add_word(&word);
+				nb_words += 1;
 			}
-
-			return Some(nb_errors);
-		} else {
-			return None;
 		}
+
+		return Some(nb_words);
+		
 	}
 }
 

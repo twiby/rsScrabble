@@ -30,27 +30,20 @@ impl StrTree {
 
 	#[allow(dead_code)]
 	pub fn get_child<'a>(&'a self, c: char) -> Option<&'a StrTree> {
-		if let Some(i) = self.get_child_idx(c) {
-			return Some(&self.children[i]);
-		} else {
-			return None;
-		}
+		let i = self.get_child_idx(c)?;
+		return Some(&self.children[i]);
 	}
 	#[allow(dead_code)]
 	fn get_child_mut<'a>(&'a mut self, c: char) -> Option<&'a mut StrTree> {
-		if let Some(i) = self.get_child_idx(c) {
-			return Some(&mut self.children[i]);
-		} else {
-			return None;
-		}
+		let i = self.get_child_idx(c)?;
+		return Some(&mut self.children[i]);
 	}
 
 	fn get_or_make_child(&mut self, c:char) -> &mut StrTree {
-		if let Some(idx) = self.get_child_idx(c) {
-			return &mut self.children[idx];
-		} else {
-			return self.add_child(c);
-		}
+		match self.get_child_idx(c) {
+			Some(idx) => return &mut self.children[idx],
+			None => return self.add_child(c)
+		};
 	}
 
 	fn add_child<'a>(&'a mut self, c: char) -> &'a mut StrTree {
@@ -79,29 +72,23 @@ impl StrTree {
 		let mut letter_idx: usize = 0;
 		let mut node = self;
 		while let Some(c) = word.chars().nth(letter_idx) {
-			if let Some(child) = node.get_child(c) {
-				node = child;
-			} else {
-				return false;
-			}
+			match node.get_child(c) {
+				None => return false,
+				Some(child) => node = child
+			};
 			letter_idx += 1;
 		}
 		return node.is_word;
 	}
 
 	// The output is wrapped in a Result to allow matching on errors
-	// Returns an Iterator to the Reader of the lines of the file.
-	pub fn fill_with_file<P>(&mut self, filename: P) -> Option<u32>
+	pub fn fill_with_file<P>(&mut self, filename: P) -> std::io::Result<u32>
 	where P: AsRef<std::path::Path>, {
-		let nb_lines:u32;
-		match cnt_lines(&filename) {
-			Err(e) => {println!("error parsing file: {e:?}"); return None}
-			Ok(n) => {nb_lines = n; println!("reading {} words from file", nb_lines)}
-		};
+		let nb_lines = cnt_lines(&filename)?;
+		println!("reading {} words from file", nb_lines);
 
 
-		let reader = read_lines(&filename).expect("cannot read file.");
-
+		let reader = read_lines(&filename)?;
 		let mut nb_words:u32 = 0;
 		for line in reader {
 			if let Ok(word) = line {
@@ -110,7 +97,7 @@ impl StrTree {
 			}
 		}
 
-		return Some(nb_words);
+		return Ok(nb_words);
 		
 	}
 }

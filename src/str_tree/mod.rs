@@ -116,25 +116,25 @@ impl StrTree {
 struct AnagramIterator<'a> {
 	letter_set: &'a mut Vec<char>,
 	size: usize,
-	idx: Vec<i8>
+	idx: Vec<usize>,
+	last_updated_idx: usize
 }
 
 impl<'a> AnagramIterator<'a> {
 	pub fn new(set: &'a mut Vec<char>) -> AnagramIterator<'a> {
 		let s = set.len();
-		let mut v = vec![0;s];
-		v[s-1] = -1;
-		return Self{letter_set: set, size: s, idx: v};
+		let v = vec![0;s];
+		return Self{letter_set: set, size: s, idx: v, last_updated_idx: 0};
 	}
 	fn word(&self, n:usize) -> String {
-		return self.letter_set[..n].iter().cloned().collect::<String>();
+		return self.letter_set[(self.size - n)..].iter().cloned().collect::<String>();
 	}
 
 	fn enter_idx(&mut self, n: usize) {
-		self.letter_set.swap(self.idx[n] as usize, self.size-n-1);
+		self.letter_set.swap(self.idx[n], self.size-n-1);
 	}
 	fn exit_idx(&mut self, n: usize) {
-		self.letter_set.swap(self.idx[n] as usize, self.size-n-1);
+		self.letter_set.swap(self.idx[n], self.size-n-1);
 	}
 
 	fn enter(&mut self) {
@@ -148,20 +148,21 @@ impl<'a> AnagramIterator<'a> {
 		}
 	}
 
-	fn increment(&mut self) -> bool {
+	fn increment(&mut self) {
+		if self.last_updated_idx < self.size - 1 {
+			self.last_updated_idx = 1 + self.last_updated_idx;
+			return;
+		}
+
 		let mut n = self.size-1;
 
 		self.idx[n] += 1;
-		while self.idx[n] >= (self.size - n) as i8 {
-			if n == 0 {
-				return false;
-			}
+		while self.idx[n] >= self.size - n && n > 0 {
 			self.idx[n] = 0;
 			n -= 1;
 			self.idx[n] += 1;
+			self.last_updated_idx = n;
 		}
-
-		return true;
 	}
 }
 
@@ -169,12 +170,14 @@ impl Iterator for AnagramIterator<'_> {
 	type Item = String;
 
 	fn next(&mut self) -> Option<Self::Item> {
-		if !self.increment() {
+		if self.idx[0] == self.size {
 			return None;
 		}
+
 		self.enter();
-		let w = self.word(self.size);
+		let w = self.word(self.last_updated_idx + 1);
 		self.exit();
+		self.increment();
 		return Some(w);
 	}
 }

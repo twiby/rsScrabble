@@ -100,5 +100,81 @@ impl StrTree {
 		return Ok(nb_words);
 		
 	}
+
+	pub fn get_anagrams(&self, mut letter_set: Vec<char>) -> Vec<String> {
+		let mut ret = Vec::<String>::new();
+
+		let it = AnagramIterator::new(&mut letter_set);
+		for w in it {
+			ret.push(w);
+		}
+
+		return ret;
+	}
 }
 
+struct AnagramIterator<'a> {
+	letter_set: &'a mut Vec<char>,
+	size: usize,
+	idx: Vec<i8>
+}
+
+impl<'a> AnagramIterator<'a> {
+	pub fn new(set: &'a mut Vec<char>) -> AnagramIterator<'a> {
+		let s = set.len();
+		let mut v = vec![0;s];
+		v[s-1] = -1;
+		return Self{letter_set: set, size: s, idx: v};
+	}
+	fn word(&self, n:usize) -> String {
+		return self.letter_set[..n].iter().cloned().collect::<String>();
+	}
+
+	fn enter_idx(&mut self, n: usize) {
+		self.letter_set.swap(self.idx[n] as usize, self.size-n-1);
+	}
+	fn exit_idx(&mut self, n: usize) {
+		self.letter_set.swap(self.idx[n] as usize, self.size-n-1);
+	}
+
+	fn enter(&mut self) {
+		for n in 0..self.size {
+			self.enter_idx(n);
+		}
+	}
+	fn exit(&mut self) {
+		for n in (0..self.size).rev() {
+			self.exit_idx(n);
+		}
+	}
+
+	fn increment(&mut self) -> bool {
+		let mut n = self.size-1;
+
+		self.idx[n] += 1;
+		while self.idx[n] >= (self.size - n) as i8 {
+			if n == 0 {
+				return false;
+			}
+			self.idx[n] = 0;
+			n -= 1;
+			self.idx[n] += 1;
+		}
+
+		return true;
+	}
+}
+
+impl Iterator for AnagramIterator<'_> {
+	type Item = String;
+
+	fn next(&mut self) -> Option<Self::Item> {
+		if !self.increment() {
+			return None;
+		}
+		self.enter();
+		let w = self.word(self.size);
+		self.exit();
+		return Some(w);
+	}
+}

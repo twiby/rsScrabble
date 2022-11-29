@@ -109,7 +109,43 @@ impl StrTree {
 			ret.push(w);
 		}
 
+		// let test = AnagramIteratorNode::new(10);
+		// for i in test {
+		// 	println!("{}", i);
+		// }
+		let size = letter_set.len();
+		let mut iterators = Vec::<AnagramIteratorNode>::new();
+
+		for i in 0..size {
+			iterators.push(AnagramIteratorNode::new(size-i));
+		}
+
 		return ret;
+	}
+}
+
+struct AnagramIteratorNode {
+	size: usize,
+	idx : usize
+}
+impl AnagramIteratorNode {
+	fn new(size: usize) -> Self {
+		return Self{
+			size: size,
+			idx: size
+		};
+	}
+	fn reset(&mut self) {
+		self.idx = self.idx;
+	}
+}
+impl Iterator for AnagramIteratorNode {
+	type Item = usize;
+	fn next(&mut self) -> Option<usize> {
+		match self.idx {
+			0 => return None,
+			_ => {self.idx -= 1; return Some(self.size - self.idx - 1);}
+		};
 	}
 }
 

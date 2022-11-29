@@ -117,51 +117,68 @@ struct AnagramIterator<'a> {
 	letter_set: &'a mut Vec<char>,
 	size: usize,
 	idx: Vec<usize>,
-	last_updated_idx: usize
+	last_updated_idx: usize,
+	word: String
 }
 
 impl<'a> AnagramIterator<'a> {
 	pub fn new(set: &'a mut Vec<char>) -> AnagramIterator<'a> {
 		let s = set.len();
 		let v = vec![0;s];
-		return Self{letter_set: set, size: s, idx: v, last_updated_idx: 0};
-	}
-	fn word(&self, n:usize) -> String {
-		return self.letter_set[(self.size - n)..].iter().cloned().collect::<String>();
+		let c:char = *set.last().unwrap();
+		return Self{letter_set: set, size: s, idx: v, last_updated_idx: 0, word: c.to_string()};
 	}
 
 	fn enter_idx(&mut self, n: usize) {
+		self.word.push(self.letter_set[self.idx[n]]);
 		self.letter_set.swap(self.idx[n], self.size-n-1);
 	}
 	fn exit_idx(&mut self, n: usize) {
+		self.word.pop();
 		self.letter_set.swap(self.idx[n], self.size-n-1);
 	}
 
+	#[allow(dead_code)]
 	fn enter(&mut self) {
 		for n in 0..self.size {
 			self.enter_idx(n);
 		}
 	}
+	#[allow(dead_code)]
 	fn exit(&mut self) {
 		for n in (0..self.size).rev() {
 			self.exit_idx(n);
 		}
 	}
 
+	fn increment_idx(&mut self, n: usize) -> bool {
+		for i in (n+1)..self.size {
+			assert!(self.idx[i] == 0);
+		}
+
+		self.exit_idx(n);
+		self.idx[n] += 1;
+		self.last_updated_idx = n;
+		if self.idx[n] < self.size - n {
+			self.enter_idx(n);
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	fn increment(&mut self) {
 		if self.last_updated_idx < self.size - 1 {
 			self.last_updated_idx = 1 + self.last_updated_idx;
+			self.enter_idx(self.last_updated_idx);
 			return;
 		}
 
 		let mut n = self.size-1;
 
-		self.idx[n] += 1;
-		while self.idx[n] >= self.size - n && n > 0 {
+		while !self.increment_idx(n) && n > 0 {
 			self.idx[n] = 0;
 			n -= 1;
-			self.idx[n] += 1;
-			self.last_updated_idx = n;
 		}
 	}
 }
@@ -174,9 +191,7 @@ impl Iterator for AnagramIterator<'_> {
 			return None;
 		}
 
-		self.enter();
-		let w = self.word(self.last_updated_idx + 1);
-		self.exit();
+		let w = self.word.clone();
 		self.increment();
 		return Some(w);
 	}

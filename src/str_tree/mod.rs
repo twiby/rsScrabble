@@ -117,7 +117,7 @@ impl StrTree {
 	pub fn get_anagrams(&self, letter_set: Vec<char>) -> Vec<String> {
 		let mut ret = Vec::<String>::new();
 
-		let it = AnagramIterator::new(letter_set.clone());
+		let it = AnagramIterator::new(self, letter_set.clone());
 		for w in it {
 			ret.push(w);
 		}
@@ -154,41 +154,48 @@ impl Iterator for AnagramIteratorNode {
 struct WordManager {
 	letter_set: Vec<char>,
 	indexes: Vec<usize>,
-	word: String
+	word: String,
+	size: usize
 }
 impl WordManager {
 	fn new(letter_set: Vec<char>) -> Self {
 		return Self{
 			letter_set: letter_set,
 			indexes: Vec::new(),
-			word: "".to_string()
+			word: "".to_string(),
+			size: 0
 		};
 	}
 	fn push(&mut self, idx: usize) {
-		let size:usize = self.indexes.len();
-		self.letter_set.swap(size, size+idx);
-		self.word.push(self.letter_set[size]);
+		self.letter_set.swap(self.size, self.size+idx);
+		self.word.push(self.letter_set[self.size]);
 		self.indexes.push(idx);
+		self.size += 1;
 	}
 	fn pop(&mut self) -> Option<usize> {
-		let size:usize = self.indexes.len() - 1;
-		self.letter_set.swap(size, size+self.indexes.last().unwrap());
+		self.size -= 1;
+		self.letter_set.swap(self.size, self.size+self.indexes.last().unwrap());
 		self.word.pop();
 		return self.indexes.pop();
 	}
+	fn next_letter(&self, idx:usize) -> char {
+		return self.letter_set[self.size + idx];
+	}
 }
 
-struct AnagramIterator {
+struct AnagramIterator<'a> {
+	tree: &'a StrTree,
 	nodes: Vec<AnagramIteratorNode>,
 	size: usize,
 	word: WordManager,
 	active_level: usize,
 	end: bool
 }
-impl AnagramIterator {
-	fn new(letter_set: Vec<char>) -> Self {
+impl<'a> AnagramIterator<'a> {
+	fn new(tree: &'a StrTree, letter_set: Vec<char>) -> AnagramIterator<'a> {
 		let size = letter_set.len();
 		let mut ret = Self{
+			tree: tree,
 			nodes: Vec::new(),
 			size: size,
 			word: WordManager::new(letter_set),
@@ -202,9 +209,16 @@ impl AnagramIterator {
 		return ret;
 	}
 	fn validate(&self, _level: usize, _idx: usize) -> bool {
-		// println!("{}, {}", _level, self.word.indexes.len());
 		assert!(_level == self.word.indexes.len());
-		return true;
+		match self.tree.get_node(&self.word.word) {
+			None => panic!("Current level should be a node: {0:?}", self.word.word),
+			Some(node) => {
+				match node.get_child_idx(self.word.next_letter(_idx)) {
+					None => return false,
+					Some(_) => return true
+				}
+			}
+		};
 	}
 	fn next_idx_level(&mut self, level: usize) -> Option<usize> {
 		loop {
@@ -259,7 +273,7 @@ impl AnagramIterator {
 		}
 	}
 }
-impl Iterator for AnagramIterator {
+impl Iterator for AnagramIterator<'_> {
 	type Item = String;
 	fn next(&mut self) -> Option<String> {
 		if self.end {

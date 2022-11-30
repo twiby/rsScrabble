@@ -11,7 +11,7 @@ fn main() {
 
 	println!("{}", _tree.is_word("prout"));
         println!("{}", _tree.is_word("arb"));
-        println!("{}", _tree.is_node("arb"));
+        println!("{}", _tree.is_node("a"));
 	println!("{}", _tree.is_word("hjklhjkl"));
 	println!("{}", _tree.is_word("acquitterait"));
 

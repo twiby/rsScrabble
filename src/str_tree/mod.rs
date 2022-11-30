@@ -101,23 +101,12 @@ impl StrTree {
 		
 	}
 
-	pub fn get_anagrams(&self, mut letter_set: Vec<char>) -> Vec<String> {
+	pub fn get_anagrams(&self, letter_set: Vec<char>) -> Vec<String> {
 		let mut ret = Vec::<String>::new();
 
-		let it = AnagramIterator::new(&mut letter_set);
+		let it = AnagramIterator::new(letter_set.clone());
 		for w in it {
 			ret.push(w);
-		}
-
-		// let test = AnagramIteratorNode::new(10);
-		// for i in test {
-		// 	println!("{}", i);
-		// }
-		let size = letter_set.len();
-		let mut iterators = Vec::<AnagramIteratorNode>::new();
-
-		for i in 0..size {
-			iterators.push(AnagramIteratorNode::new(size-i));
 		}
 
 		return ret;
@@ -136,7 +125,7 @@ impl AnagramIteratorNode {
 		};
 	}
 	fn reset(&mut self) {
-		self.idx = self.idx;
+		self.idx = self.size;
 	}
 }
 impl Iterator for AnagramIteratorNode {
@@ -149,86 +138,122 @@ impl Iterator for AnagramIteratorNode {
 	}
 }
 
-struct AnagramIterator<'a> {
-	letter_set: &'a mut Vec<char>,
-	size: usize,
-	idx: Vec<usize>,
-	last_updated_idx: usize,
+struct WordManager {
+	letter_set: Vec<char>,
+	indexes: Vec<usize>,
 	word: String
 }
-
-impl<'a> AnagramIterator<'a> {
-	pub fn new(set: &'a mut Vec<char>) -> AnagramIterator<'a> {
-		let s = set.len();
-		let v = vec![0;s];
-		let c:char = *set.last().unwrap();
-		return Self{letter_set: set, size: s, idx: v, last_updated_idx: 0, word: c.to_string()};
+impl WordManager {
+	fn new(letter_set: Vec<char>) -> Self {
+		return Self{
+			letter_set: letter_set,
+			indexes: Vec::new(),
+			word: "".to_string()
+		};
 	}
-
-	fn enter_idx(&mut self, n: usize) {
-		self.word.push(self.letter_set[self.idx[n]]);
-		self.letter_set.swap(self.idx[n], self.size-n-1);
+	fn push(&mut self, idx: usize) {
+		let size:usize = self.indexes.len();
+		self.letter_set.swap(size, size+idx);
+		self.word.push(self.letter_set[size]);
+		self.indexes.push(idx);
 	}
-	fn exit_idx(&mut self, n: usize) {
+	fn pop(&mut self) -> Option<usize> {
+		let size:usize = self.indexes.len() - 1;
+		self.letter_set.swap(size, size+self.indexes.last().unwrap());
 		self.word.pop();
-		self.letter_set.swap(self.idx[n], self.size-n-1);
+		return self.indexes.pop();
 	}
+}
 
-	#[allow(dead_code)]
-	fn enter(&mut self) {
-		for n in 0..self.size {
-			self.enter_idx(n);
+struct AnagramIterator {
+	nodes: Vec<AnagramIteratorNode>,
+	size: usize,
+	word: WordManager,
+	active_level: usize,
+	end: bool
+}
+impl AnagramIterator {
+	fn new(letter_set: Vec<char>) -> Self {
+		let size = letter_set.len();
+		let mut ret = Self{
+			nodes: Vec::new(),
+			size: size,
+			word: WordManager::new(letter_set),
+			active_level: 0,
+			end: false
+		};
+		for i in 0..size {
+			ret.nodes.push(AnagramIteratorNode::new(size - i));
+		}
+		ret.word.push(ret.nodes[0].next().unwrap());
+		return ret;
+	}
+	fn validate(&self, _level: usize, _idx: usize) -> bool {
+		// println!("{}, {}", _level, self.word.indexes.len());
+		assert!(_level == self.word.indexes.len());
+		return true;
+	}
+	fn next_idx_level(&mut self, level: usize) -> Option<usize> {
+		loop {
+			let next_idx:usize;
+			match self.nodes[level].next() {
+				None => return None,
+				Some(i) => next_idx = i
+			};
+			if self.validate(level, next_idx) {
+				return Some(next_idx);
+			}
 		}
 	}
-	#[allow(dead_code)]
-	fn exit(&mut self) {
-		for n in (0..self.size).rev() {
-			self.exit_idx(n);
-		}
-	}
-
-	fn increment_idx(&mut self, n: usize) -> bool {
-		for i in (n+1)..self.size {
-			assert!(self.idx[i] == 0);
-		}
-
-		self.exit_idx(n);
-		self.idx[n] += 1;
-		self.last_updated_idx = n;
-		if self.idx[n] < self.size - n {
-			self.enter_idx(n);
-			return true;
-		} else {
+	fn try_go_down(&mut self) -> bool {
+		if self.active_level == self.size-1 {
 			return false;
 		}
+		self.nodes[self.active_level+1].reset();
+		match self.next_idx_level(self.active_level+1) {
+			None => return false,
+			Some(idx) => {
+				self.word.push(idx); 
+				self.active_level += 1; 
+				return true;
+			}
+		}
 	}
-
-	fn increment(&mut self) {
-		if self.last_updated_idx < self.size - 1 {
-			self.last_updated_idx = 1 + self.last_updated_idx;
-			self.enter_idx(self.last_updated_idx);
+	fn try_go_side(&mut self) -> bool {
+		self.word.pop();
+		match self.next_idx_level(self.active_level) {
+			None => return false,
+			Some(idx) => {
+				self.word.push(idx);
+				return true;
+			}
+		}
+	}
+	fn next(&mut self) {
+		if self.try_go_down() {
 			return;
 		}
 
-		let mut n = self.size-1;
+		loop {
+			if self.try_go_side() {
+				return;
+			} else if self.active_level == 0 {
+				self.end = true;
+				return;
+			}
+			self.active_level -= 1;
 
-		while !self.increment_idx(n) && n > 0 {
-			self.idx[n] = 0;
-			n -= 1;
 		}
 	}
 }
-
-impl Iterator for AnagramIterator<'_> {
+impl Iterator for AnagramIterator {
 	type Item = String;
-
-	fn next(&mut self) -> Option<Self::Item> {
-		if self.idx[0] == self.size {
+	fn next(&mut self) -> Option<String> {
+		if self.end {
 			return None;
 		}
-
-		let w = self.word.clone();
-		self.increment();
+		let w = self.word.word.clone();
+		self.next();
 		return Some(w);
 	}
 }

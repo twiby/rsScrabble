@@ -29,7 +29,7 @@ impl StrTree {
 	}
 
 	#[allow(dead_code)]
-	pub fn get_child<'a>(&'a self, c: char) -> Option<&'a StrTree> {
+	fn get_child<'a>(&'a self, c: char) -> Option<&'a StrTree> {
 		let i = self.get_child_idx(c)?;
 		return Some(&self.children[i]);
 	}
@@ -69,16 +69,29 @@ impl StrTree {
 	}
 
 	pub fn is_word(&self, word: &str) -> bool {
+		match self.get_node(word) {
+			None => return false,
+			Some(node) => return node.is_word
+		};
+	}
+	pub fn is_node(&self, word: &str) -> bool {
+		match self.get_node(word) {
+			None => return false,
+			Some(_) => return true
+		};
+	}
+
+	pub fn get_node<'a: 'b, 'b>(&'a self, word: &str) -> Option<&'b StrTree> {
 		let mut letter_idx: usize = 0;
 		let mut node = self;
 		while let Some(c) = word.chars().nth(letter_idx) {
 			match node.get_child(c) {
-				None => return false,
+				None => return None,
 				Some(child) => node = child
 			};
 			letter_idx += 1;
 		}
-		return node.is_word;
+		return Some(node);
 	}
 
 	// The output is wrapped in a Result to allow matching on errors

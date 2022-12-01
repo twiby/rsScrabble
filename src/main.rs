@@ -16,7 +16,7 @@ fn main() {
 	println!("{}", _tree.is_word("acquitterait"));
 
 
-        for w in _tree.get_anagrams(String::from("abc").chars().collect()) {
+        for w in _tree.get_anagrams(String::from("arbre").chars().collect()) {
                 println!("{w:?}");
         }
 

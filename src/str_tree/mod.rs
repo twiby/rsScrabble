@@ -2,6 +2,7 @@ mod read_file;
 use read_file::read_lines;
 use read_file::cnt_lines;
 
+use std::collections::HashSet;
 
 pub struct StrTree {
 	data: Option<char>,
@@ -114,12 +115,12 @@ impl StrTree {
 		
 	}
 
-	pub fn get_anagrams(&self, letter_set: Vec<char>) -> Vec<String> {
-		let mut ret = Vec::<String>::new();
+	pub fn get_anagrams(&self, letter_set: Vec<char>) -> HashSet<String> {
+		let mut ret = HashSet::<String>::new();
 
 		let it = AnagramIterator::new(self, letter_set.clone());
 		for w in it {
-			ret.push(w);
+			ret.insert(w);
 		}
 
 		return ret;
@@ -155,7 +156,8 @@ struct WordManager {
 	letter_set: Vec<char>,
 	indexes: Vec<usize>,
 	word: String,
-	size: usize
+	size: usize,
+	is_word: bool
 }
 impl WordManager {
 	fn new(letter_set: Vec<char>) -> Self {
@@ -163,14 +165,16 @@ impl WordManager {
 			letter_set: letter_set,
 			indexes: Vec::new(),
 			word: "".to_string(),
-			size: 0
+			size: 0,
+			is_word: false
 		};
 	}
-	fn push(&mut self, idx: usize) {
+	fn push(&mut self, (idx, is_word): (usize, bool)) {
 		self.letter_set.swap(self.size, self.size+idx);
 		self.word.push(self.letter_set[self.size]);
 		self.indexes.push(idx);
 		self.size += 1;
+		self.is_word = is_word;
 	}
 	fn pop(&mut self) -> Option<usize> {
 		self.size -= 1;
@@ -205,30 +209,27 @@ impl<'a> AnagramIterator<'a> {
 		for i in 0..size {
 			ret.nodes.push(AnagramIteratorNode::new(size - i));
 		}
-		ret.word.push(ret.nodes[0].next().unwrap());
+		ret.word.push((ret.nodes[0].next().unwrap(), false));
+		ret.next_word();
 		return ret;
 	}
-	fn validate(&self, _level: usize, _idx: usize) -> bool {
+	fn validate(&self, _level: usize, _idx: usize) -> Option<bool> {
 		assert!(_level == self.word.indexes.len());
 		match self.tree.get_node(&self.word.word) {
 			None => panic!("Current level should be a node: {0:?}", self.word.word),
-			Some(node) => {
-				match node.get_child_idx(self.word.next_letter(_idx)) {
-					None => return false,
-					Some(_) => return true
-				}
-			}
+			Some(node) => return Some(node.get_child(self.word.next_letter(_idx))?.is_word)
 		};
 	}
-	fn next_idx_level(&mut self, level: usize) -> Option<usize> {
+	fn next_idx_level(&mut self, level: usize) -> Option<(usize, bool)> {
 		loop {
 			let next_idx:usize;
 			match self.nodes[level].next() {
 				None => return None,
 				Some(i) => next_idx = i
 			};
-			if self.validate(level, next_idx) {
-				return Some(next_idx);
+			match self.validate(level, next_idx) {
+				None => continue,
+				Some(is_word) => return Some((next_idx, is_word))
 			}
 		}
 	}
@@ -272,6 +273,12 @@ impl<'a> AnagramIterator<'a> {
 
 		}
 	}
+	fn next_word(&mut self) {
+		self.next();
+		while !self.end && !self.word.is_word {
+			self.next();
+		}
+	}
 }
 impl Iterator for AnagramIterator<'_> {
 	type Item = String;
@@ -280,7 +287,7 @@ impl Iterator for AnagramIterator<'_> {
 			return None;
 		}
 		let w = self.word.word.clone();
-		self.next();
+		self.next_word();
 		return Some(w);
 	}
 }

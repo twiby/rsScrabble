@@ -125,6 +125,48 @@ impl StrTree {
 
 		return ret;
 	}
+
+	pub fn get_anagrams_2(&self, letter_set: String) -> Vec<String> {
+		let mut letter_set_vec:Vec<char> = letter_set.chars().collect();
+		letter_set_vec.sort_unstable();
+		return self.get_anagrams_internal(letter_set_vec, "".to_string());
+	}
+
+	fn get_anagrams_internal(&self, letter_set: Vec<char>, current_word: String) -> Vec<String> {
+		let mut ret = Vec::<String>::new();
+
+		for i in 0..letter_set.len() {
+			if i > 0 && letter_set[i-1]==letter_set[i] {
+				continue;
+			}
+
+			let c = letter_set[i];
+
+			let node:&StrTree;
+			match self.get_child(c) {
+				None => continue,
+				Some(child) => node = child
+			};
+
+			if node.is_word {
+				let mut word = current_word.clone();
+				word.push(c);
+				ret.push(word);
+			}
+
+			let mut subset = Vec::<char>::new();
+			for ii in 0..letter_set.len() {
+				if ii != i {
+					subset.push(letter_set[ii]);
+				}
+			}
+			let mut new_current_word = current_word.clone();
+			new_current_word.push(c);
+			ret.extend(node.get_anagrams_internal(subset, new_current_word.clone()));
+		}
+
+		return ret;
+	}
 }
 
 struct AnagramIteratorNode {

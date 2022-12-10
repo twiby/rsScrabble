@@ -20,4 +20,7 @@ fn main() {
                 println!("{w:?}");
         }
 
+        let words = _tree.get_anagrams_2(String::from("arbre"));
+        println!("{0:?}", words);
+
 }

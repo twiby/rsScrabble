@@ -112,34 +112,43 @@ impl StrTree {
 	fn get_anagrams_internal(&self, letter_set: Vec<char>, current_word: String) -> Vec<String> {
 		let mut ret = Vec::<String>::new();
 
+		let mut new_current_word = current_word.clone();
+
+		// Handle case where there's at least one joker in set
+		if letter_set.first() == Some(&'0') {
+			for child in &self.children {
+				new_current_word.push(child.data.unwrap());
+
+				if child.is_word { ret.push(new_current_word.clone()); }
+				ret.extend(child.get_anagrams_internal(letter_set[1..].to_vec(), new_current_word.clone()));
+
+				new_current_word.pop();
+			}
+		}
+
+		// Now take every letter in the set, and see if you can build a word from it
 		for i in 0..letter_set.len() {
+			// This avoids repetition coming from identitical letters
 			if i > 0 && letter_set[i-1]==letter_set[i] {
 				continue;
 			}
 
-			let c = letter_set[i];
-
 			let node:&StrTree;
-			match self.get_child(c) {
+			match self.get_child(letter_set[i]) {
 				None => continue,
 				Some(child) => node = child
 			};
 
-			if node.is_word {
-				let mut word = current_word.clone();
-				word.push(c);
-				ret.push(word);
-			}
+			new_current_word.push(letter_set[i]);
 
-			let mut subset = Vec::<char>::new();
-			for ii in 0..letter_set.len() {
-				if ii != i {
-					subset.push(letter_set[ii]);
-				}
-			}
-			let mut new_current_word = current_word.clone();
-			new_current_word.push(c);
-			ret.extend(node.get_anagrams_internal(subset, new_current_word.clone()));
+			if node.is_word { ret.push(new_current_word.clone()); }
+
+			ret.extend(
+				node.get_anagrams_internal(
+					[letter_set[0..i].to_vec(), letter_set[i+1..].to_vec()].concat(), 
+					new_current_word.clone()));
+
+			new_current_word.pop();
 		}
 
 		return ret;

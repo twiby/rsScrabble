@@ -9,6 +9,9 @@ fn main() {
 		Err(e) => println!("File not read: {e:?}")
 	};
 
-        let words = _tree.get_anagrams(String::from("zoologistes"));
-        println!("{0:?}", words);
-}
+	let words = _tree.get_anagrams(String::from("a00"));
+	println!("{0:?}", words);
+	for w in words {
+		assert!(_tree.is_word(&w));
+	}
+	}

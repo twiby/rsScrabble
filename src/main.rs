@@ -9,18 +9,6 @@ fn main() {
 		Err(e) => println!("File not read: {e:?}")
 	};
 
-	println!("{}", _tree.is_word("prout"));
-        println!("{}", _tree.is_word("arb"));
-        println!("{}", _tree.is_node("a"));
-	println!("{}", _tree.is_word("hjklhjkl"));
-	println!("{}", _tree.is_word("acquitterait"));
-
-
-        for w in _tree.get_anagrams(String::from("arbre").chars().collect()) {
-                println!("{w:?}");
-        }
-
-        let words = _tree.get_anagrams_2(String::from("arbre"));
+        let words = _tree.get_anagrams(String::from("zoologistes"));
         println!("{0:?}", words);
-
 }

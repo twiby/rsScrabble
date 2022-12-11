@@ -1,17 +1,9 @@
 mod str_tree;
-use str_tree::StrTree;
+use str_tree::Dictionnary;
 
 fn main() {
-	let mut _tree = StrTree::init();
-
-	match _tree.fill_with_file("../pyScrabble/scrabbleWords.txt") {
-		Ok(nb_words) => println!("File read ! {} words found", nb_words),
-		Err(e) => println!("File not read: {e:?}")
+	match str_tree::build_dict_from_file("../pyScrabble/scrabbleWords.txt") {
+		Err(e) => {println!("File not read: {e:?}"); return;},
+		Ok(dict) => println!("{0:?}", dict.get_anagrams("a00"))
 	};
-
-	let words = _tree.get_anagrams(String::from("a00"));
-	println!("{0:?}", words);
-	for w in words {
-		assert!(_tree.is_word(&w));
-	}
-	}
+}

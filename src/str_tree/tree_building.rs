@@ -142,10 +142,9 @@ impl StrTree {
 				continue;
 			}
 
-			let node:&StrTree;
-			match self.get_child(letter_set[i]) {
+			let node = match self.get_child(letter_set[i]) {
 				None => continue,
-				Some(child) => node = child
+				Some(node) => node
 			};
 
 			new_current_word.push(letter_set[i]);

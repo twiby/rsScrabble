@@ -5,17 +5,17 @@ use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
 
 #[pyclass]
-struct TreeInterface {
+struct WordFinder {
 	_tree: str_tree::StrTree
 }
 
 #[pymethods]
-impl TreeInterface {
+impl WordFinder {
 	#[new]
 	fn new(filename: &str) -> PyResult<Self> {
 		match str_tree::build_dict_from_file(filename) {
 			Err(e) => return Err(PyErr::new::<PyValueError, _>(e)),
-			Ok(tree) => return Ok(TreeInterface{_tree: tree})
+			Ok(tree) => return Ok(WordFinder{_tree: tree})
 		};
 	}
 
@@ -31,6 +31,6 @@ impl TreeInterface {
 
 #[pymodule]
 fn rusted_tree(_py: Python, m: &PyModule) -> PyResult<()> {
-	m.add_class::<TreeInterface>()?;
+	m.add_class::<WordFinder>()?;
 	return Ok(());
 }

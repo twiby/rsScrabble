@@ -23,6 +23,17 @@ impl Dictionnary for StrTree {
 		letter_set_vec.sort_unstable();
 		return self.get_anagrams_internal(letter_set_vec, "".to_string());
 	}
+
+	fn add_word(&mut self, word: &str) {
+		let mut letter_idx: usize = 0;
+		let mut node = self;
+
+		while let Some(c) = word.chars().nth(letter_idx) {
+			node = node.get_or_make_child(c);
+			letter_idx += 1;
+		}
+		node.is_word = true;
+	}
 }
 
 impl StrTree {
@@ -64,17 +75,6 @@ impl StrTree {
 		};
 		self.children.push(new_tree);
 		return self.children.last_mut().unwrap();
-	}
-
-	fn add_word(&mut self, word: &str) {
-		let mut letter_idx: usize = 0;
-		let mut node = self;
-
-		while let Some(c) = word.chars().nth(letter_idx) {
-			node = node.get_or_make_child(c);
-			letter_idx += 1;
-		}
-		node.is_word = true;
 	}
 
 	#[allow(dead_code)]

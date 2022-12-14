@@ -2,8 +2,12 @@ mod str_tree;
 use str_tree::Dictionnary;
 
 fn main() {
-	match str_tree::build_dict_from_file("../pyScrabble/scrabbleWords.txt") {
+	let tree = match str_tree::build_dict_from_file("../pyScrabble/scrabbleWords.txt") {
 		Err(e) => {println!("File not read: {e:?}"); return;},
-		Ok(dict) => println!("{0:?}", dict.get_anagrams("a00"))
+		Ok(dict) => dict
 	};
+	println!("{0:?}", tree.get_anagrams("catastrophe", Some(vec![2,3])));
+	println!("{0:?}", tree.get_anagrams("a00", None).len());
+	println!("{0:?}", tree.get_anagrams("a00", Some(vec![2])).len());
+	println!("{0:?}", tree.get_anagrams("a00", Some(vec![3])).len());
 }

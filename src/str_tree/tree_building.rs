@@ -18,10 +18,11 @@ impl Dictionnary for StrTree {
 		};
 	}
 
-	fn get_anagrams(&self, letter_set: &str) -> Vec<String> {
+	fn get_anagrams(&self, letter_set: &str, mut nb_letters: Option<Vec<i8>>) -> Vec<String> {
 		let mut letter_set_vec:Vec<char> = letter_set.chars().collect();
 		letter_set_vec.sort_unstable();
-		return self.get_anagrams_internal(letter_set_vec, "".to_string());
+		nb_letters.sort_and_fuse();
+		return self.get_anagrams_internal(letter_set_vec, "".to_string(), nb_letters);
 	}
 
 	fn add_word(&mut self, word: &str) {
@@ -33,6 +34,46 @@ impl Dictionnary for StrTree {
 			letter_idx += 1;
 		}
 		node.is_word = true;
+	}
+}
+
+trait ConstraintNbLetters {
+	fn sort_and_fuse(&mut self);
+	fn decrease(&mut self) -> bool;
+	fn valid(&self) -> bool;
+}
+impl ConstraintNbLetters for Option<Vec<i8>> {
+	fn sort_and_fuse(&mut self) {
+		match self {
+			None => (),
+			Some(ref mut vec) => {
+				vec.sort_unstable();
+				vec.reverse();
+				vec.dedup();
+			}
+		};
+	}
+
+	fn decrease(&mut self) -> bool {
+		match self {
+			None => true,
+			Some(ref mut vec) => {
+				if vec.last() == Some(&0) {
+					vec.pop();
+				}
+				for el in vec.into_iter() {
+					*el -= 1;
+				}
+				!vec.is_empty()
+			}
+		}
+	}
+
+	fn valid(&self) -> bool {
+		match self {
+			None => true,
+			Some(vec) => vec.last() == Some(&0)
+		}
 	}
 }
 
@@ -118,19 +159,25 @@ impl StrTree {
 		
 	}
 
-	fn get_anagrams_internal(&self, letter_set: Vec<char>, current_word: String) -> Vec<String> {
+	fn get_anagrams_internal(&self, letter_set: Vec<char>, current_word: String, mut nb_letters: Option<Vec<i8>>) -> Vec<String> {
 		let mut ret = Vec::<String>::new();
 
 		let mut new_current_word = current_word.clone();
+		if self.is_word && nb_letters.valid() { ret.push(new_current_word.clone()); }
+
+		if !nb_letters.decrease() {
+			return ret;
+		}
 
 		// Handle case where there's at least one joker in set
 		if letter_set.first() == Some(&'0') {
 			for child in &self.children {
 				new_current_word.push(child.data.unwrap());
-
-				if child.is_word { ret.push(new_current_word.clone()); }
-				ret.extend(child.get_anagrams_internal(letter_set[1..].to_vec(), new_current_word.clone()));
-
+				ret.extend(
+					child.get_anagrams_internal(
+						letter_set[1..].to_vec(), 
+						new_current_word.clone(),
+						nb_letters.clone()));
 				new_current_word.pop();
 			}
 		}
@@ -148,14 +195,11 @@ impl StrTree {
 			};
 
 			new_current_word.push(letter_set[i]);
-
-			if node.is_word { ret.push(new_current_word.clone()); }
-
 			ret.extend(
 				node.get_anagrams_internal(
 					[letter_set[0..i].to_vec(), letter_set[i+1..].to_vec()].concat(), 
-					new_current_word.clone()));
-
+					new_current_word.clone(),
+					nb_letters.clone()));
 			new_current_word.pop();
 		}
 

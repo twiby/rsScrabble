@@ -23,8 +23,8 @@ impl WordFinder {
 		self._tree.add_word(new_word);
 	}
 
-	fn get_anagrams(&self, letter_set: &str) -> Vec<String> {
-		return self._tree.get_anagrams(letter_set);
+	fn get_anagrams(&self, letter_set: &str, nb_letters: Option<Vec<i8>>) -> Vec<String> {
+		return self._tree.get_anagrams(letter_set, nb_letters);
 	}
 }
 

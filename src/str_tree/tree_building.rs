@@ -2,6 +2,9 @@ use crate::str_tree::read_file::read_lines;
 use crate::str_tree::read_file::cnt_lines;
 use crate::str_tree::Dictionnary;
 
+type ConstraintNbLetters = Option<Vec<u8>>;
+type ConstraintLetters = Option<Vec<(u8, char)>>;
+
 pub struct StrTree {
 	data: Option<char>,
 	nb_letters: u8,
@@ -18,11 +21,17 @@ impl Dictionnary for StrTree {
 		};
 	}
 
-	fn get_anagrams(&self, letter_set: &str, mut nb_letters: Option<Vec<i8>>) -> Vec<String> {
+	fn get_anagrams(
+		&self, 
+		letter_set: &str, 
+		mut nb_letters: ConstraintNbLetters,
+		mut letter_constraints: ConstraintLetters) 
+	-> Vec<String> {
 		let mut letter_set_vec:Vec<char> = letter_set.chars().collect();
 		letter_set_vec.sort_unstable();
 		nb_letters.sort_and_fuse();
-		return self.get_anagrams_internal(letter_set_vec, "".to_string(), nb_letters);
+		letter_constraints.sort_and_fuse();
+		return self.get_anagrams_internal(letter_set_vec, "".to_string(), nb_letters, letter_constraints);
 	}
 
 	fn add_word(&mut self, word: &str) {
@@ -44,12 +53,12 @@ impl Dictionnary for StrTree {
 	}
 }
 
-trait ConstraintNbLetters {
+trait ConstraintNbLettersTrait {
 	fn sort_and_fuse(&mut self);
 	fn decrease(&mut self) -> bool;
 	fn valid(&self) -> bool;
 }
-impl ConstraintNbLetters for Option<Vec<i8>> {
+impl ConstraintNbLettersTrait for ConstraintNbLetters {
 	fn sort_and_fuse(&mut self) {
 		match self {
 			None => (),
@@ -80,6 +89,44 @@ impl ConstraintNbLetters for Option<Vec<i8>> {
 		match self {
 			None => true,
 			Some(vec) => vec.last() == Some(&0)
+		}
+	}
+}
+
+trait ConstraintLettersTrait {
+	fn sort_and_fuse(&mut self);
+	fn decrease(&mut self) -> Option<char>;
+}
+impl ConstraintLettersTrait for ConstraintLetters {
+	fn sort_and_fuse(&mut self) {
+		match self {
+			None => (),
+			Some(ref mut vec) => {
+				vec.sort_unstable_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+				vec.reverse();
+				vec.dedup_by(|a, b| a.0.eq(&b.0));
+			}
+		}
+	}
+
+	fn decrease(&mut self) -> Option<char> {
+		match self {
+			None => None,
+			Some(ref mut vec) => {
+				if vec.is_empty() {
+					return None;
+				}
+				let (i,c) = *vec.last().unwrap();
+				for (idx, _) in vec.into_iter() {
+					*idx -= 1;
+				}
+				if i == 0 {
+					vec.pop();
+					return Some(c);
+				} else {
+					return None;
+				}
+			}
 		}
 	}
 }
@@ -157,17 +204,39 @@ impl StrTree {
 		
 	}
 
-	fn get_anagrams_internal(&self, letter_set: Vec<char>, current_word: String, mut nb_letters: Option<Vec<i8>>) -> Vec<String> {
-		let mut ret = Vec::<String>::new();
-
+	fn get_anagrams_internal(
+		&self, 
+		letter_set: Vec<char>, 
+		current_word: String, 
+		mut nb_letters: ConstraintNbLetters, 
+		mut letter_constraints: ConstraintLetters)
+	-> Vec<String> {
 		let mut new_current_word = current_word.clone();
+
+		// Case the next letter is a constraint: continue only on that branch if it exists
+		if let Some(constraint) = letter_constraints.decrease() {
+			let node = match self.get_child(constraint) {
+				None => return Vec::<String>::new(),
+				Some(node) => node 
+			};
+			new_current_word.push(constraint);
+			nb_letters.decrease();
+			return node.get_anagrams_internal(
+				letter_set.clone(),
+				new_current_word.clone(),
+				nb_letters.clone(),
+				letter_constraints.clone());
+		}
+
+		let mut ret = Vec::<String>::new();
 		if self.is_word && nb_letters.valid() { ret.push(new_current_word.clone()); }
 
+		// Case there is no higher up number of letters possible: exit
 		if !nb_letters.decrease() {
 			return ret;
 		}
 
-		// Handle case where there's at least one joker in set
+		// Case where there's at least one joker in set
 		if letter_set.first() == Some(&'0') {
 			for child in &self.children {
 				new_current_word.push(child.data.unwrap());
@@ -175,7 +244,8 @@ impl StrTree {
 					child.get_anagrams_internal(
 						letter_set[1..].to_vec(), 
 						new_current_word.clone(),
-						nb_letters.clone()));
+						nb_letters.clone(),
+						letter_constraints.clone()));
 				new_current_word.pop();
 			}
 		}
@@ -197,7 +267,8 @@ impl StrTree {
 				node.get_anagrams_internal(
 					[letter_set[0..i].to_vec(), letter_set[i+1..].to_vec()].concat(), 
 					new_current_word.clone(),
-					nb_letters.clone()));
+					nb_letters.clone(),
+					letter_constraints.clone()));
 			new_current_word.pop();
 		}
 

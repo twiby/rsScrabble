@@ -27,8 +27,30 @@ impl WordFinder {
 		return self._tree.is_word(word);
 	}
 
-	fn get_anagrams(&self, letter_set: &str, nb_letters: Option<Vec<i8>>) -> Vec<String> {
-		return self._tree.get_anagrams(letter_set, nb_letters);
+	fn get_anagrams(
+		&self, 
+		letter_set: &str, 
+		nb_letters: Option<Vec<u8>>, 
+		constraint_letters: Option<Vec<char>>,
+		constraint_indices: Option<Vec<u8>>) 
+	-> PyResult<Vec<String>> {
+		// Sanitizing internal arguments for constraint letters
+		if constraint_letters.is_none() != constraint_indices.is_none() {
+			return Err(PyErr::new::<PyValueError, _>("WordFinder: provide both constraint letters and indices, or none"));
+		}
+
+		let constraints: Option<Vec<(u8, char)>> = match constraint_letters {
+			None => None,
+			Some(letters) => {
+				if letters.len() != constraint_indices.as_ref().unwrap().len() {
+					return Err(PyErr::new::<PyValueError, _>("WordFinder: constraint indices and letters must be the same length"));
+				}
+				Some(constraint_indices.unwrap().into_iter().zip(letters.into_iter()).collect())
+			}
+		};
+
+		// Call internal function
+		return Ok(self._tree.get_anagrams(letter_set, nb_letters, constraints));
 	}
 }
 

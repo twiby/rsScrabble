@@ -35,6 +35,13 @@ impl Dictionnary for StrTree {
 		}
 		node.is_word = true;
 	}
+
+	fn is_word(&self, word: &str) -> bool {
+		match self.get_node(word) {
+			None => return false,
+			Some(node) => return node.is_word
+		};
+	}
 }
 
 trait ConstraintNbLetters {
@@ -118,15 +125,6 @@ impl StrTree {
 		return self.children.last_mut().unwrap();
 	}
 
-	#[allow(dead_code)]
-	fn is_word(&self, word: &str) -> bool {
-		match self.get_node(word) {
-			None => return false,
-			Some(node) => return node.is_word
-		};
-	}
-
-	#[allow(dead_code)]
 	fn get_node<'a: 'b, 'b>(&'a self, word: &str) -> Option<&'b StrTree> {
 		let mut letter_idx: usize = 0;
 		let mut node = self;

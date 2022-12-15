@@ -10,4 +10,7 @@ fn main() {
 	println!("{0:?}", tree.get_anagrams("a00", None).len());
 	println!("{0:?}", tree.get_anagrams("a00", Some(vec![2])).len());
 	println!("{0:?}", tree.get_anagrams("a00", Some(vec![3])).len());
+	println!("{0:?}", tree.is_word("njklhjkl"));
+	println!("{0:?}", tree.is_word("ud"));
+	println!("{0:?}", tree.is_word("woh"));
 }

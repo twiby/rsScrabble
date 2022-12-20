@@ -73,15 +73,15 @@ impl ConstraintLettersTrait for ConstraintLetters {
 					return None;
 				}
 				let (i,c) = *vec.last().unwrap();
+				let ret = match i {
+					0 => {vec.pop(); Some(c)},
+					_ => None
+				};
+
 				for (idx, _) in vec.into_iter() {
 					*idx -= 1;
 				}
-				if i == 0 {
-					vec.pop();
-					return Some(c);
-				} else {
-					return None;
-				}
+				return ret;
 			}
 		}
 	}

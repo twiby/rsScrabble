@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod test;
+
 mod str_tree;
 use str_tree::Dictionnary;
 

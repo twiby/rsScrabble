@@ -1,9 +1,6 @@
-use crate::str_tree::read_file::read_lines;
-use crate::str_tree::read_file::cnt_lines;
-use crate::str_tree::Dictionnary;
-
-type ConstraintNbLetters = Option<Vec<u8>>;
-type ConstraintLetters = Option<Vec<(u8, char)>>;
+use crate::str_tree::{read_lines, cnt_lines};
+use crate::str_tree::{Dictionnary, ConstraintLetters, ConstraintNbLetters};
+use crate::str_tree::{ConstraintNbLettersTrait, ConstraintLettersTrait};
 
 pub struct StrTree {
 	data: Option<char>,
@@ -12,7 +9,7 @@ pub struct StrTree {
 	children: Vec<StrTree>
 }
 
-impl Dictionnary for StrTree {
+impl Dictionnary<StrTree> for StrTree {
 	fn build_dict_from_file(filename: &str) -> std::io::Result<StrTree> {
 		let mut ret = StrTree::init();
 		match ret.fill_with_file(filename) {
@@ -50,84 +47,6 @@ impl Dictionnary for StrTree {
 			None => return false,
 			Some(node) => return node.is_word
 		};
-	}
-}
-
-trait ConstraintNbLettersTrait {
-	fn sort_and_fuse(&mut self);
-	fn decrease(&mut self) -> bool;
-	fn valid(&self) -> bool;
-}
-impl ConstraintNbLettersTrait for ConstraintNbLetters {
-	fn sort_and_fuse(&mut self) {
-		match self {
-			None => (),
-			Some(ref mut vec) => {
-				vec.sort_unstable();
-				vec.reverse();
-				vec.dedup();
-			}
-		};
-	}
-
-	fn decrease(&mut self) -> bool {
-		match self {
-			None => true,
-			Some(ref mut vec) => {
-				if vec.last() == Some(&0) {
-					vec.pop();
-				}
-				for el in vec.into_iter() {
-					*el -= 1;
-				}
-				!vec.is_empty()
-			}
-		}
-	}
-
-	fn valid(&self) -> bool {
-		match self {
-			None => true,
-			Some(vec) => vec.last() == Some(&0)
-		}
-	}
-}
-
-trait ConstraintLettersTrait {
-	fn sort_and_fuse(&mut self);
-	fn decrease(&mut self) -> Option<char>;
-}
-impl ConstraintLettersTrait for ConstraintLetters {
-	fn sort_and_fuse(&mut self) {
-		match self {
-			None => (),
-			Some(ref mut vec) => {
-				vec.sort_unstable_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
-				vec.reverse();
-				vec.dedup_by(|a, b| a.0.eq(&b.0));
-			}
-		}
-	}
-
-	fn decrease(&mut self) -> Option<char> {
-		match self {
-			None => None,
-			Some(ref mut vec) => {
-				if vec.is_empty() {
-					return None;
-				}
-				let (i,c) = *vec.last().unwrap();
-				for (idx, _) in vec.into_iter() {
-					*idx -= 1;
-				}
-				if i == 0 {
-					vec.pop();
-					return Some(c);
-				} else {
-					return None;
-				}
-			}
-		}
 	}
 }
 

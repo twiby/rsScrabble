@@ -1,24 +1,6 @@
-pub trait Dictionnary<T> {
-	fn build_dict_from_file(filename: &str) -> std::io::Result<T>;
-	fn get_anagrams(&self, letter_set: &str, nb_letter: Option<Vec<u8>>, letter_constraints: Option<Vec<(u8, char)>>) -> Vec<String>;
-	fn add_word(&mut self, new_word: &str);
-	fn is_word(&self, word: &str) -> bool;
-}
+use crate::str_tree::{ConstraintNbLetters, ConstraintLetters};
 
-pub type ConstraintNbLetters = Option<Vec<u8>>;
-pub type ConstraintLetters = Option<Vec<(u8, char)>>;
-
-pub trait ConstraintNbLettersTrait {
-	fn sort_and_fuse(&mut self);
-	fn decrease(&mut self) -> bool;
-	fn valid(&self) -> bool;
-}
-pub trait ConstraintLettersTrait {
-	fn sort_and_fuse(&mut self);
-	fn decrease(&mut self) -> Option<char>;
-}
-
-impl ConstraintNbLettersTrait for ConstraintNbLetters {
+impl ConstraintNbLetters for Option<Vec<u8>> {
 	fn sort_and_fuse(&mut self) {
 		match self {
 			None => (),
@@ -56,7 +38,7 @@ impl ConstraintNbLettersTrait for ConstraintNbLetters {
 	}
 }
 
-impl ConstraintLettersTrait for ConstraintLetters {
+impl ConstraintLetters for Option<Vec<(u8, char)>> {
 	fn sort_and_fuse(&mut self) {
 		match self {
 			None => (),

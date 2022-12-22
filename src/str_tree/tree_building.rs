@@ -1,6 +1,5 @@
 use crate::str_tree::{read_lines, cnt_lines};
-use crate::str_tree::{Dictionnary, ConstraintLetters, ConstraintNbLetters};
-use crate::str_tree::{ConstraintNbLettersTrait, ConstraintLettersTrait};
+use crate::str_tree::{Dictionnary, ConstraintNbLetters, ConstraintLetters};
 
 pub struct StrTree {
 	data: Option<char>,
@@ -18,12 +17,13 @@ impl Dictionnary<StrTree> for StrTree {
 		};
 	}
 
-	fn get_anagrams(
+	fn get_anagrams<CNbL, CL>(
 		&self, 
 		letter_set: &str, 
-		mut nb_letters: ConstraintNbLetters,
-		mut letter_constraints: ConstraintLetters) 
-	-> Vec<String> {
+		mut nb_letters: CNbL,
+		mut letter_constraints: CL) 
+	-> Vec<String> 
+	where CNbL: ConstraintNbLetters, CL: ConstraintLetters {
 		let mut letter_set_vec:Vec<char> = letter_set.chars().collect();
 		letter_set_vec.sort_unstable();
 		nb_letters.sort_and_fuse();
@@ -123,13 +123,14 @@ impl StrTree {
 		
 	}
 
-	fn get_anagrams_internal(
+	fn get_anagrams_internal<CNbL, CL>(
 		&self, 
 		letter_set: Vec<char>, 
 		current_word: String, 
-		mut nb_letters: ConstraintNbLetters, 
-		mut letter_constraints: ConstraintLetters)
-	-> Vec<String> {
+		mut nb_letters: CNbL, 
+		mut letter_constraints: CL)
+	-> Vec<String> 
+	where CNbL: ConstraintNbLetters, CL: ConstraintLetters {
 		let mut new_current_word = current_word.clone();
 
 		// Case the next letter is a constraint: continue only on that branch if it exists

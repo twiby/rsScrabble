@@ -153,6 +153,9 @@ fn letters_constraints() {
 		empty));
 
 	assert!(unordered_equal(
+		&tree.get_anagrams("rbre", None, Some(vec![(0, 'a')])), 
+		&correct_answer));
+	assert!(unordered_equal(
 		&tree.get_anagrams("arbe", None, Some(vec![(1, 'r')])), 
 		&correct_answer));
 

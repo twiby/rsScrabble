@@ -3,7 +3,7 @@ use crate::str_tree::Dictionnary;
 
 fn get_anagrams(letters: &str) -> Vec<String> {
 	let tree = str_tree::build_dict_from_file("src/test/words.txt").expect("File not found");
-	return tree.get_anagrams(letters, None, None);
+	return tree.get_anagrams(letters, None, None, None);
 }
 
 fn found_in_vec<T>(el: &T, vec: &Vec<T>) -> bool 
@@ -114,20 +114,20 @@ fn nb_letters_constraints() {
 	];
 
 	assert!(unordered_equal(
-		&tree.get_anagrams("arbre", Some(vec![]), None), 
+		&tree.get_anagrams("arbre", Some(vec![]), None, None), 
 		&Vec::<String>::new()));
 
 	assert!(unordered_equal(
-		&tree.get_anagrams("arbre", Some(vec![3]), None), 
+		&tree.get_anagrams("arbre", Some(vec![3]), None, None), 
 		&vec!["bar".to_string()]));
 
 	assert!(unordered_equal(
-		&tree.get_anagrams("arbre", Some(vec![5]), None), 
+		&tree.get_anagrams("arbre", Some(vec![5]), None, None), 
 		&correct_answer));
 
 	correct_answer.push("bar".to_string());
 	assert!(unordered_equal(
-		&tree.get_anagrams("arbre", Some(vec![3, 5]), None),
+		&tree.get_anagrams("arbre", Some(vec![3, 5]), None, None),
 		&correct_answer));
 }
 
@@ -137,10 +137,10 @@ fn no_letter_actually_used() {
 	let empty = &Vec::<String>::new();
 
 	assert!(unordered_equal(
-		&tree.get_anagrams("", Some(vec![0]), None),
+		&tree.get_anagrams("", Some(vec![0]), None, None),
 		empty));
 	assert!(unordered_equal(
-		&tree.get_anagrams("", Some(vec![0]), Some(vec![(0, 'b'), (1, 'a'), (2, 'r')])),
+		&tree.get_anagrams("", Some(vec![0]), Some(vec![(0, 'b'), (1, 'a'), (2, 'r')]), None),
 		empty));
 }
 
@@ -152,7 +152,7 @@ fn nb_letters_does_not_include_constraints() {
 	];
 
 	assert!(unordered_equal(
-		&tree.get_anagrams("re", Some(vec![2]), Some(vec![(0, 'b'), (1, 'a'), (2, 'r')])),
+		&tree.get_anagrams("re", Some(vec![2]), Some(vec![(0, 'b'), (1, 'a'), (2, 'r')]), None),
 		&correct_answer));
 }
 
@@ -166,23 +166,53 @@ fn letters_constraints() {
 	];
 
 	assert!(unordered_equal(
-		&tree.get_anagrams("arbe", None, Some(vec![(2, 'z')])), 
+		&tree.get_anagrams("arbe", None, Some(vec![(2, 'z')]), None), 
 		empty));
 
 	assert!(unordered_equal(
-		&tree.get_anagrams("rbre", None, Some(vec![(0, 'a')])), 
+		&tree.get_anagrams("rbre", None, Some(vec![(0, 'a')]), None), 
 		&correct_answer));
 	assert!(unordered_equal(
-		&tree.get_anagrams("arbe", None, Some(vec![(1, 'r')])), 
+		&tree.get_anagrams("arbe", None, Some(vec![(1, 'r')]), None), 
 		&correct_answer));
 
 	correct_answer.push("barre".to_string());
 	assert!(unordered_equal(
-		&tree.get_anagrams("arbe", None, Some(vec![(3, 'r')])), 
+		&tree.get_anagrams("arbe", None, Some(vec![(3, 'r')]), None), 
 		&correct_answer));
 
 	correct_answer.push("bar".to_string());
 	assert!(unordered_equal(
-		&tree.get_anagrams("arbr", None, Some(vec![(4, 'e')])), 
+		&tree.get_anagrams("arbr", None, Some(vec![(4, 'e')]), None), 
+		&correct_answer));
+}
+
+#[test]
+fn words_constraint() {
+	let tree = str_tree::build_dict_from_file("src/test/words.txt").expect("File not found");
+
+	let mut correct_answer = vec![
+		"bar".to_string()
+	];
+	let mut constraints = Some(vec![(2, crate::constraints::WordToFill::new("ba".to_string(),"re".to_string()).unwrap())]);
+	assert!(unordered_equal(
+		&tree.get_anagrams("arbre", Some(vec![2, 3]), None, constraints.clone()), 
+		&correct_answer));
+
+	correct_answer = vec![
+		"barre".to_string(),
+		"bar".to_string()
+	];
+	constraints = Some(vec![(2, crate::constraints::WordToFill::new("ba".to_string(),"re".to_string()).unwrap())]);
+	assert!(unordered_equal(
+		&tree.get_anagrams("arbre", None, None, constraints.clone()), 
+		&correct_answer));
+
+	correct_answer = vec![
+		"arbre".to_string()
+	];
+	constraints = Some(vec![(2, crate::constraints::WordToFill::new("ar".to_string(),"re".to_string()).unwrap())]);
+	assert!(unordered_equal(
+		&tree.get_anagrams("arbre", None, None, constraints.clone()), 
 		&correct_answer));
 }

@@ -1,6 +1,6 @@
 use crate::str_tree::{read_lines, cnt_lines};
 use crate::str_tree::Dictionnary;
-use crate::str_tree::{ConstraintNbLetters, ConstraintLetters};
+use crate::str_tree::{ConstraintNbLetters, ConstraintLetters, ConstraintWords};
 
 pub struct StrTree {
 	data: Option<char>,
@@ -18,18 +18,20 @@ impl Dictionnary<StrTree> for StrTree {
 		};
 	}
 
-	fn get_anagrams<CNbL, CL>(
+	fn get_anagrams<CNbL, CL, CW>(
 		&self, 
 		letter_set: &str, 
 		mut nb_letters: CNbL,
-		mut letter_constraints: CL) 
+		mut letter_constraints: CL,
+		mut word_constraints: CW) 
 	-> Vec<String> 
-	where CNbL: ConstraintNbLetters, CL: ConstraintLetters {
+	where CNbL: ConstraintNbLetters, CL: ConstraintLetters, CW: ConstraintWords {
 		let mut letter_set_vec:Vec<char> = letter_set.chars().collect();
 		letter_set_vec.sort_unstable();
 		nb_letters.sort_and_fuse();
 		letter_constraints.sort_and_fuse();
-		return self.get_anagrams_internal(letter_set_vec, "".to_string(), nb_letters, letter_constraints);
+		word_constraints.sort_and_fuse();
+		return self.get_anagrams_internal(self, letter_set_vec, "".to_string(), nb_letters, letter_constraints, word_constraints);
 	}
 
 	fn add_word(&mut self, word: &str) {
@@ -124,15 +126,30 @@ impl StrTree {
 		
 	}
 
-	fn get_anagrams_internal<CNbL, CL>(
+	fn get_anagrams_internal<CNbL, CL, CW>(
 		&self, 
+		head: &StrTree, 
 		letter_set: Vec<char>, 
 		current_word: String, 
 		mut nb_letters: CNbL, 
-		mut letter_constraints: CL)
+		mut letter_constraints: CL,
+		mut word_constraints: CW)
 	-> Vec<String> 
-	where CNbL: ConstraintNbLetters, CL: ConstraintLetters {
+	where CNbL: ConstraintNbLetters, CL: ConstraintLetters, CW: ConstraintWords {
 		let mut new_current_word = current_word.clone();
+
+		match self.data {
+			None => (),
+			Some(c) => {
+				match word_constraints.decrease(c) {
+					None => (),
+					Some(word) => {
+						if !head.is_word(&word) { return Vec::<String>::new(); }
+					}
+				}
+				new_current_word.push(c);
+			}
+		};
 
 		// Case the next letter is a constraint: continue only on that branch if it exists
 		if let Some(constraint) = letter_constraints.decrease() {
@@ -140,12 +157,13 @@ impl StrTree {
 				None => return Vec::<String>::new(),
 				Some(node) => node 
 			};
-			new_current_word.push(constraint);
 			return node.get_anagrams_internal(
+				head, 
 				letter_set.clone(),
 				new_current_word.clone(),
 				nb_letters.clone(),
-				letter_constraints.clone());
+				letter_constraints.clone(),
+				word_constraints.clone());
 		}
 
 		let mut ret = Vec::<String>::new();
@@ -159,14 +177,14 @@ impl StrTree {
 		// Case where there's at least one joker in set
 		if letter_set.first() == Some(&'0') {
 			for child in &self.children {
-				new_current_word.push(child.data.unwrap());
 				ret.extend(
 					child.get_anagrams_internal(
+						head, 
 						letter_set[1..].to_vec(), 
 						new_current_word.clone(),
 						nb_letters.clone(),
-						letter_constraints.clone()));
-				new_current_word.pop();
+						letter_constraints.clone(),
+						word_constraints.clone()));
 			}
 		}
 
@@ -182,14 +200,14 @@ impl StrTree {
 				Some(node) => node
 			};
 
-			new_current_word.push(letter_set[i]);
 			ret.extend(
 				node.get_anagrams_internal(
+					head, 
 					[letter_set[0..i].to_vec(), letter_set[i+1..].to_vec()].concat(), 
 					new_current_word.clone(),
 					nb_letters.clone(),
-					letter_constraints.clone()));
-			new_current_word.pop();
+					letter_constraints.clone(),
+					word_constraints.clone()));
 		}
 
 		return ret;

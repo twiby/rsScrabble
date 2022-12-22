@@ -55,7 +55,7 @@ impl WordFinder {
 		};
 
 		// Call internal function
-		return Ok(self._tree.get_anagrams(letter_set, nb_letters, constraints));
+		return Ok(self._tree.get_anagrams(letter_set, nb_letters, constraints, None));
 	}
 }
 

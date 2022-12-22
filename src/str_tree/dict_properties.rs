@@ -26,6 +26,9 @@ impl ConstraintNbLettersTrait for ConstraintNbLetters {
 				vec.sort_unstable();
 				vec.reverse();
 				vec.dedup();
+				if vec.last() == Some(&0) {
+					vec.pop();
+				}
 			}
 		};
 	}

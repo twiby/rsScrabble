@@ -140,6 +140,31 @@ fn nb_letters_constraints() {
 }
 
 #[test]
+fn no_letter_actually_used() {
+	let tree = load_tree("src/test/words.txt");
+	let empty = &Vec::<String>::new();
+
+	assert!(unordered_equal(
+		&tree.get_anagrams("", Some(vec![0]), None),
+		empty));
+	assert!(unordered_equal(
+		&tree.get_anagrams("", Some(vec![0]), Some(vec![(0, 'b'), (1, 'a'), (2, 'r')])),
+		empty));
+}
+
+#[test]
+fn nb_letters_does_not_include_constraints() {
+	let tree = load_tree("src/test/words.txt");
+	let correct_answer = vec![
+		"barre".to_string()
+	];
+
+	assert!(unordered_equal(
+		&tree.get_anagrams("re", Some(vec![2]), Some(vec![(0, 'b'), (1, 'a'), (2, 'r')])),
+		&correct_answer));
+}
+
+#[test]
 fn letters_constraints() {
 	let tree = load_tree("src/test/words.txt");
 

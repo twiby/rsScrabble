@@ -139,7 +139,6 @@ impl StrTree {
 				Some(node) => node 
 			};
 			new_current_word.push(constraint);
-			nb_letters.decrease();
 			return node.get_anagrams_internal(
 				letter_set.clone(),
 				new_current_word.clone(),

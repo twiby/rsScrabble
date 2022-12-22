@@ -195,19 +195,17 @@ impl StrTree {
 				continue;
 			}
 
-			let node = match self.get_child(letter_set[i]) {
+			match self.get_child(letter_set[i]) {
 				None => continue,
-				Some(node) => node
+				Some(node) => ret.extend(
+					node.get_anagrams_internal(
+						head, 
+						[letter_set[0..i].to_vec(), letter_set[i+1..].to_vec()].concat(), 
+						new_current_word.clone(),
+						nb_letters.clone(),
+						letter_constraints.clone(),
+						word_constraints.clone()))
 			};
-
-			ret.extend(
-				node.get_anagrams_internal(
-					head, 
-					[letter_set[0..i].to_vec(), letter_set[i+1..].to_vec()].concat(), 
-					new_current_word.clone(),
-					nb_letters.clone(),
-					letter_constraints.clone(),
-					word_constraints.clone()));
 		}
 
 		return ret;

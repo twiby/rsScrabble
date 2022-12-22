@@ -1,6 +1,13 @@
 const SIDE: usize = 15;
 const SIZE: usize = SIDE * SIDE;
 
+#[derive(Debug)]
+pub enum DeserializingError {
+	UnknownSymbol,
+	WrongLength
+}
+use DeserializingError::*;
+
 #[derive(Copy)]
 #[derive(Clone)]
 enum Tile{
@@ -11,7 +18,8 @@ enum Tile{
 }
 
 pub trait BoardService {
-	fn deserialize(message: String) -> Option<Board>;
+	fn serialize(&self) -> String;
+	fn deserialize(message: String) -> Result<Board, DeserializingError>;
 }
 
 pub struct Board {
@@ -19,7 +27,24 @@ pub struct Board {
 }
 
 impl BoardService for Board {
-	fn deserialize(message: String) -> Option<Board> {
+	fn serialize(&self) -> String {
+		let mut message = "".to_string();
+		for x in 0..SIDE {
+			for y in 0..SIDE {
+				message.push( match self.at(x, y) {
+					Tile::EmptyTile => '_',
+					Tile::LetterTile(c) => c,
+					Tile::WordBonusTile(n) => (n+3).to_string().chars().nth(0).unwrap(),
+					Tile::LetterBonusTile(n) => n.to_string().chars().nth(0).unwrap()
+				});
+				message.push(' ');
+			}
+			message.push('\n');
+		}
+		return message;
+	}
+
+	fn deserialize(message: String) -> Result<Board, DeserializingError> {
 		let mut board = Board::new_empty();
 
 		let mut tile_nb:usize = 0;
@@ -31,17 +56,17 @@ impl BoardService for Board {
 				'5' => Tile::WordBonusTile(2),
 				'6' => Tile::WordBonusTile(3),
 				c => {
-					if !c.is_ascii_lowercase() { return None; }
+					if !c.is_ascii_lowercase() { return Err(UnknownSymbol); }
 					Tile::LetterTile(c)
 				}
 			};
 			tile_nb += 1;
 		}
 		if tile_nb != SIZE {
-			return None;
+			return Err(WrongLength);
 		}
 
-		return Some(board);
+		return Ok(board);
 	}
 }
 
@@ -50,20 +75,15 @@ impl Board {
 		return Board{tiles: [Tile::EmptyTile; SIZE]};
 	}
 
-	pub fn print(&self) {
-		for x in 0..SIDE {
-			let mut line = "".to_string();
-			for y in 0..SIDE {
-				line.push( match self.tiles[x*SIDE + y] {
-					Tile::EmptyTile => '_',
-					Tile::LetterTile(c) => c,
-					Tile::WordBonusTile(n) => (n+3).to_string().chars().nth(0).unwrap(),
-					Tile::LetterBonusTile(n) => n.to_string().chars().nth(0).unwrap()
-				});
-				line.push(' ');
-			}
-			println!("{0:?}", line);
+	#[allow(dead_code)]
+	fn at_nopanic(&self, x: usize, y: usize) -> Option<Tile> {
+		if x >= SIDE || y >= SIDE {
+			return None;
 		}
+		return Some(self.at(x, y));
+	}
+	fn at(&self, x: usize, y:usize) -> Tile {
+		return self.tiles[x*SIDE + y];
 	}
 }
 

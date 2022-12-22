@@ -4,6 +4,8 @@ mod test;
 mod str_tree;
 use str_tree::Dictionnary;
 
+mod constraints;
+
 use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
 

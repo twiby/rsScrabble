@@ -1,4 +1,4 @@
-use crate::str_tree::{ConstraintNbLetters, ConstraintLetters};
+use crate::constraints::{ConstraintNbLetters, ConstraintLetters};
 
 impl ConstraintNbLetters for Option<Vec<u8>> {
 	fn sort_and_fuse(&mut self) {

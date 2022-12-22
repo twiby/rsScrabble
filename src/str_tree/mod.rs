@@ -5,7 +5,7 @@ pub use read_file::read_lines;
 mod tree_building;
 pub use tree_building::StrTree;
 
-mod constraints;
+pub use crate::constraints::{ConstraintNbLetters, ConstraintLetters};
 
 pub trait Dictionnary<T> {
 	fn build_dict_from_file(filename: &str) -> std::io::Result<T>;
@@ -15,16 +15,6 @@ pub trait Dictionnary<T> {
 
 	fn add_word(&mut self, new_word: &str);
 	fn is_word(&self, word: &str) -> bool;
-}
-
-pub trait ConstraintNbLetters: Clone {
-	fn sort_and_fuse(&mut self);
-	fn decrease(&mut self) -> bool;
-	fn valid(&self) -> bool;
-}
-pub trait ConstraintLetters: Clone {
-	fn sort_and_fuse(&mut self);
-	fn decrease(&mut self) -> Option<char>;
 }
 
 pub fn build_dict_from_file(filename: &str) -> std::io::Result<StrTree> {

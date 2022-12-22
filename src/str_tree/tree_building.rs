@@ -1,5 +1,6 @@
 use crate::str_tree::{read_lines, cnt_lines};
-use crate::str_tree::{Dictionnary, ConstraintNbLetters, ConstraintLetters};
+use crate::str_tree::Dictionnary;
+use crate::str_tree::{ConstraintNbLetters, ConstraintLetters};
 
 pub struct StrTree {
 	data: Option<char>,

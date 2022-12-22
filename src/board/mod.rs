@@ -23,7 +23,8 @@ pub trait BoardService {
 }
 
 pub struct Board {
-	tiles: [Tile; SIZE]
+	tiles: [Tile; SIZE],
+	transposed: bool
 }
 
 impl BoardService for Board {
@@ -72,9 +73,16 @@ impl BoardService for Board {
 
 impl Board {
 	fn new_empty() -> Board {
-		return Board{tiles: [Tile::EmptyTile; SIZE]};
+		return Board{tiles: [Tile::EmptyTile; SIZE], transposed: false};
 	}
 
+	// Accessors
+	fn at(&self, x: usize, y:usize) -> Tile {
+		let t = self.transposed as usize;
+		let x_transposed = x*(1-t) + y*t;
+		let y_transposed = x*t + y*(1-t);
+		return self.tiles[x_transposed*SIDE + y_transposed];
+	}
 	#[allow(dead_code)]
 	fn at_nopanic(&self, x: usize, y: usize) -> Option<Tile> {
 		if x >= SIDE || y >= SIDE {
@@ -82,8 +90,9 @@ impl Board {
 		}
 		return Some(self.at(x, y));
 	}
-	fn at(&self, x: usize, y:usize) -> Tile {
-		return self.tiles[x*SIDE + y];
-	}
+
+	// fn transpose(&mut self) {
+	// 	self.transposed = !self.transposed;
+	// }
 }
 

@@ -1,16 +1,8 @@
 use crate::str_tree;
-use crate::str_tree::StrTree;
 use crate::str_tree::Dictionnary;
 
-fn load_tree(path: &str) -> StrTree {
-	match str_tree::build_dict_from_file(path) {
-		Err(_) => panic!("Unable to open file {0:?}", path),
-		Ok(dict) => dict
-	}
-}
-
 fn get_anagrams(letters: &str) -> Vec<String> {
-	let tree = load_tree("src/test/words.txt");
+	let tree = str_tree::build_dict_from_file("src/test/words.txt").expect("File not found");
 	return tree.get_anagrams(letters, None, None);
 }
 
@@ -41,18 +33,18 @@ where T: std::cmp::PartialEq {
 
 #[test]
 fn load_success() {
-	let _ = load_tree("src/test/words.txt");
+	let _ = str_tree::build_dict_from_file("src/test/words.txt").expect("File not found");
 }
 
 #[test]
 #[should_panic]
 fn load_fail() {
-	let _ = load_tree("prout.prout");
+	let _ = str_tree::build_dict_from_file("prout.prout").expect("File not found");
 }
 
 #[test]
 fn existing_words() {
-	let tree = load_tree("src/test/words.txt");
+	let tree = str_tree::build_dict_from_file("src/test/words.txt").expect("File not found");
 	assert!(tree.is_word("arbre"));
 	assert!(tree.is_word("bar"));
 	assert!(tree.is_word("barre"));
@@ -63,7 +55,7 @@ fn existing_words() {
 
 #[test]
 fn add_word() {
-	let mut tree = load_tree("src/test/words.txt");
+	let mut tree = str_tree::build_dict_from_file("src/test/words.txt").expect("File not found");
 	assert!(!tree.is_word("erreur"));
 	tree.add_word("erreur");
 	assert!(tree.is_word("erreur"));
@@ -115,7 +107,7 @@ fn no_anagrams() {
 
 #[test]
 fn nb_letters_constraints() {
-	let tree = load_tree("src/test/words.txt");
+	let tree = str_tree::build_dict_from_file("src/test/words.txt").expect("File not found");
 	let mut correct_answer = vec![
 		"arbre".to_string(),
 		"barre".to_string()
@@ -141,7 +133,7 @@ fn nb_letters_constraints() {
 
 #[test]
 fn no_letter_actually_used() {
-	let tree = load_tree("src/test/words.txt");
+	let tree = str_tree::build_dict_from_file("src/test/words.txt").expect("File not found");
 	let empty = &Vec::<String>::new();
 
 	assert!(unordered_equal(
@@ -154,7 +146,7 @@ fn no_letter_actually_used() {
 
 #[test]
 fn nb_letters_does_not_include_constraints() {
-	let tree = load_tree("src/test/words.txt");
+	let tree = str_tree::build_dict_from_file("src/test/words.txt").expect("File not found");
 	let correct_answer = vec![
 		"barre".to_string()
 	];
@@ -166,7 +158,7 @@ fn nb_letters_does_not_include_constraints() {
 
 #[test]
 fn letters_constraints() {
-	let tree = load_tree("src/test/words.txt");
+	let tree = str_tree::build_dict_from_file("src/test/words.txt").expect("File not found");
 
 	let empty = &Vec::<String>::new();
 	let mut correct_answer = vec![

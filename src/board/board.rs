@@ -1,4 +1,4 @@
-use crate::board::{BoardService, TileInfo};
+use crate::board::BoardService;
 use crate::board::{DeserializingError, DeserializingError::*};
 
 const SIDE: usize = 15;
@@ -6,19 +6,11 @@ const SIZE: usize = SIDE * SIDE;
 
 #[derive(Copy)]
 #[derive(Clone)]
-enum Tile{
+pub enum Tile{
 	EmptyTile,
 	LetterTile(char),
 	LetterBonusTile(u8),
 	WordBonusTile(u8)
-}
-impl TileInfo for Tile {
-	fn is_occupied(&self) -> bool {
-		match self {
-			Tile::LetterTile(_) => true,
-			_ => false
-		}
-	}
 }
 
 pub struct Board {

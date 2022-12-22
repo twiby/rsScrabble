@@ -122,6 +122,10 @@ fn nb_letters_constraints() {
 	];
 
 	assert!(unordered_equal(
+		&tree.get_anagrams("arbre", Some(vec![]), None), 
+		&Vec::<String>::new()));
+
+	assert!(unordered_equal(
 		&tree.get_anagrams("arbre", Some(vec![3]), None), 
 		&vec!["bar".to_string()]));
 

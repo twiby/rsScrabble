@@ -216,3 +216,19 @@ fn words_constraint() {
 		&tree.get_anagrams("arbre", None, None, constraints.clone()), 
 		&correct_answer));
 }
+
+#[test]
+fn all_constraints() {
+	let tree = str_tree::build_dict_from_file("src/test/words.txt").expect("File not found");
+	let correct_answer = vec![
+		"bar".to_string()
+	];
+
+	assert!(unordered_equal(
+		&tree.get_anagrams(
+			"rbre", 
+			Some(vec![2]), 
+			Some(vec![(1, 'a')]), 
+			Some(vec![(2, crate::constraints::WordToFill::new("a".to_string(), "bre".to_string()).unwrap())])),
+		&correct_answer));
+}

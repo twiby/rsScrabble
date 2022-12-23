@@ -220,7 +220,7 @@ fn words_constraint() {
 #[test]
 fn all_constraints() {
 	let tree = str_tree::build_dict_from_file("src/test/words.txt").expect("File not found");
-	let correct_answer = vec![
+	let mut correct_answer = vec![
 		"bar".to_string()
 	];
 
@@ -231,4 +231,119 @@ fn all_constraints() {
 			Some(vec![(1, 'a')]), 
 			Some(vec![(2, crate::constraints::WordToFill::new("a".to_string(), "bre".to_string()).unwrap())])),
 		&correct_answer));
+
+	correct_answer.push("barre".to_string());
+
+	assert!(unordered_equal(
+		&tree.get_anagrams(
+			"rbre", 
+			None, 
+			Some(vec![(1, 'a')]), 
+			Some(Vec::<(u8, crate::constraints::WordToFill)>::new())),
+		&correct_answer));
+
+	assert!(unordered_equal(
+		&tree.get_anagrams(
+			"rbre", 
+			None, 
+			Some(vec![(1, 'a')]), 
+			None),
+		&correct_answer));
+}
+
+use crate::board;
+use crate::board::BoardService;
+
+use crate::constraints;
+use crate::constraints::{WordToFill, PotentialWordConditions, PotentialWordConditionsBuilder};
+
+#[test]
+fn get_conditions_vertical() {
+	let mut str_board = "".to_string();
+	str_board.push_str("6__2___6___2__6");
+	str_board.push_str("_5___3___3___5_");
+	str_board.push_str("__5___2_2___5__");
+	str_board.push_str("2__5___2___5__2");
+	str_board.push_str("____5_____5____");
+	str_board.push_str("_3___3___3___3_");
+	str_board.push_str("__2___2_2___2__");
+	str_board.push_str("6__2___a___2__6");
+	str_board.push_str("__2___2r2___2__");
+	str_board.push_str("_3___3_b_3___3_");
+	str_board.push_str("____5__r__5____");
+	str_board.push_str("2__5___e___5__2");
+	str_board.push_str("__5___2_2___5__");
+	str_board.push_str("_5___3___3___5_");
+	str_board.push_str("6__2___6___2__6");
+
+	let board = board::deserialize(str_board).expect("Error when deserializing board message");
+	let mut pw = constraints::PotentialWord::new();
+
+	board.get_conditions(10, 0, &mut pw);
+	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![7,8,9,10,11,12,13,14]));
+	assert_eq!(pw.get_constraint_letters(), Some(vec![(7, 'r')]));
+	assert_eq!(pw.get_constraint_words(), Some(Vec::<(u8, WordToFill)>::new()));
+
+	board.get_conditions(11, 0, &mut pw);
+	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![7,8,9,10,11,12,13,14]));
+	assert_eq!(pw.get_constraint_letters(), Some(vec![(7, 'e')]));
+	assert_eq!(pw.get_constraint_words(), Some(Vec::<(u8, WordToFill)>::new()));
+
+	board.get_conditions(12, 0, &mut pw);
+	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![8,9,10,11,12,13,14,15]));
+	assert_eq!(pw.get_constraint_letters(), Some(Vec::<(u8, char)>::new()));
+	assert_eq!(pw.get_constraint_words(), Some(vec![(7, WordToFill::new("arbre".to_string(), "".to_string()).unwrap())]));
+
+	board.get_conditions(6, 0, &mut pw);
+	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![8,9,10,11,12,13,14,15]));
+	assert_eq!(pw.get_constraint_letters(), Some(Vec::<(u8, char)>::new()));
+	assert_eq!(pw.get_constraint_words(), Some(vec![(7, WordToFill::new("".to_string(), "arbre".to_string()).unwrap())]));
+
+	board.get_conditions(11, 7, &mut pw);
+	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![0,1,2,3,4,5,6,7]));
+	assert_eq!(pw.get_constraint_letters(), Some(vec![(0, 'e')]));
+	assert_eq!(pw.get_constraint_words(), Some(Vec::<(u8, WordToFill)>::new()));
+
+	board.get_conditions(11, 8, &mut pw);
+	assert_eq!(pw.get_constraint_nb_letters(), Some(Vec::<u8>::new()));
+	assert_eq!(pw.get_constraint_letters(), Some(Vec::<(u8, char)>::new()));
+	assert_eq!(pw.get_constraint_words(), Some(Vec::<(u8, WordToFill)>::new()));
+}
+
+#[test]
+fn get_conditions_horizontal() {
+	let mut str_board = "".to_string();
+	str_board.push_str("6__2___6___2__6");
+	str_board.push_str("_5___3___3___5_");
+	str_board.push_str("__5___2_2___5__");
+	str_board.push_str("2__5___2___5__2");
+	str_board.push_str("____5_____5____");
+	str_board.push_str("_3___3___3___3_");
+	str_board.push_str("__2___2_2___2__");
+	str_board.push_str("6__2___arbre__6");
+	str_board.push_str("__2___2_2___2__");
+	str_board.push_str("_3___3___3___3_");
+	str_board.push_str("____5_____5____");
+	str_board.push_str("2__5___2___5__2");
+	str_board.push_str("__5___2_2___5__");
+	str_board.push_str("_5___3___3___5_");
+	str_board.push_str("6__2___6___2__6");
+
+	let board = board::deserialize(str_board).expect("Error when deserializing board message");
+	let mut pw = constraints::PotentialWord::new();
+
+	board.get_conditions(10, 0, &mut pw);
+	assert_eq!(pw.get_constraint_nb_letters(), Some(Vec::<u8>::new()));
+	assert_eq!(pw.get_constraint_letters(), Some(Vec::<(u8, char)>::new()));
+	assert_eq!(pw.get_constraint_words(), Some(Vec::<(u8, WordToFill)>::new()));
+
+	board.get_conditions(7, 0, &mut pw);
+	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![7,8,9,10]));
+	assert_eq!(pw.get_constraint_letters(), Some(vec![(7, 'a'),(8, 'r'),(9, 'b'),(10, 'r'),(11, 'e')]));
+	assert_eq!(pw.get_constraint_words(), Some(Vec::<(u8, WordToFill)>::new()));
+
+	board.get_conditions(8, 10, &mut pw);
+	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![1,2,3,4,5]));
+	assert_eq!(pw.get_constraint_letters(), Some(Vec::<(u8, char)>::new()));
+	assert_eq!(pw.get_constraint_words(), Some(vec![(0, WordToFill::new("r".to_string(), "".to_string()).unwrap()),(1, WordToFill::new("e".to_string(), "".to_string()).unwrap())]));
 }

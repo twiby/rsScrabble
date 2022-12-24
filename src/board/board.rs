@@ -123,21 +123,7 @@ impl BoardService for Board {
 			}
 
 			// Find letters above and/or below: a word to fill
-			let mut above = "".to_string();
-			for xx in 1u8..(x as u8) {
-				match self.at(x-xx as usize, absolute_y).letter() {
-					Some(c) => above.push(c),
-					None => break
-				};
-			}
-			let mut below = "".to_string();
-			for xx in 1u8..((SIDE-x) as u8) {
-				match self.at(x+xx as usize, absolute_y).letter() {
-					Some(c) => below.push(c),
-					None => break
-				};
-			}
-			match WordToFill::new(above.chars().rev().collect::<String>(), below) {
+			match WordToFill::new(self.get_above(x, absolute_y), self.get_below(x, absolute_y)) {
 				Err(_) => (),
 				Ok(word) => {
 					at_least_one_constraints = true;
@@ -172,6 +158,29 @@ impl Board {
 			return None;
 		}
 		return Some(self.at(x, y));
+	}
+
+	fn get_above(&self, x: usize, y: usize) -> String {
+		let mut above = "".to_string();
+		for xx in 1u8..(x as u8) {
+			match self.at(x-xx as usize, y).letter() {
+				Some(c) => above.push(c),
+				None => break
+			};
+		}
+
+		return above.chars().rev().collect::<String>();
+	}
+
+	fn get_below(&self, x: usize, y: usize) -> String {
+		let mut below = "".to_string();
+		for xx in 1u8..((SIDE-x) as u8) {
+			match self.at(x+xx as usize, y).letter() {
+				Some(c) => below.push(c),
+				None => break
+			};
+		}
+		return below;
 	}
 
 	// fn transpose(&mut self) {

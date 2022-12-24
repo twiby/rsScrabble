@@ -89,9 +89,12 @@ fn all_anagrams_without_joker() {
 fn all_anagrams_with_joker() {
 	let anagrams = get_anagrams("arbr0");
 	let correct_answer = vec![
-		"arbre".to_string(),
+		"arbrE".to_string(),
 		"bar".to_string(),
-		"barre".to_string()
+		"Bar".to_string(),
+		"bAr".to_string(),
+		"baR".to_string(),
+		"barrE".to_string()
 	];
 
 	assert!(unordered_equal(&anagrams, &correct_answer));
@@ -270,7 +273,7 @@ fn get_conditions_vertical() {
 	str_board.push_str("6__2___a___2__6");
 	str_board.push_str("__2___2r2___2__");
 	str_board.push_str("_3___3_b_3___3_");
-	str_board.push_str("____5__r__5____");
+	str_board.push_str("____5__R__5____");
 	str_board.push_str("2__5___e___5__2");
 	str_board.push_str("__5___2_2___5__");
 	str_board.push_str("_5___3___3___5_");

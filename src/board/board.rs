@@ -11,6 +11,7 @@ const SIZE: usize = SIDE * SIDE;
 pub enum Tile{
 	EmptyTile,
 	LetterTile(char),
+	JokerTile(char),
 	LetterBonusTile(u8),
 	WordBonusTile(u8)
 }
@@ -25,7 +26,7 @@ impl Tile {
 
 	fn letter(&self) -> Option<char> {
 		match self {
-			LetterTile(c) => Some(*c),
+			LetterTile(c) | JokerTile(c) => Some(*c),
 			_ => None
 		}
 	}
@@ -44,6 +45,7 @@ impl BoardService for Board {
 				message.push( match self.at(x, y) {
 					EmptyTile => '_',
 					LetterTile(c) => c,
+					JokerTile(c) => c.to_ascii_uppercase(),
 					WordBonusTile(n) => (n+3).to_string().chars().nth(0).unwrap(),
 					LetterBonusTile(n) => n.to_string().chars().nth(0).unwrap()
 				});
@@ -66,8 +68,13 @@ impl BoardService for Board {
 				'5' => WordBonusTile(2),
 				'6' => WordBonusTile(3),
 				c => {
-					if !c.is_ascii_lowercase() { return Err(UnknownSymbol); }
-					LetterTile(c)
+					if c.is_ascii_lowercase() {
+						LetterTile(c)
+					} else if c.is_ascii_uppercase() {
+						JokerTile(c.to_ascii_lowercase()) 
+					} else { 
+						return Err(UnknownSymbol); 
+					}
 				}
 			};
 			tile_nb += 1;

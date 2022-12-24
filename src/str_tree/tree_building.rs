@@ -126,6 +126,12 @@ impl StrTree {
 		
 	}
 
+	fn new_word_with_append(word: &str, c: char) -> String {
+		let mut ret = word.to_string();
+		ret.push(c);
+		return ret;
+	}
+
 	fn get_anagrams_internal<CNbL, CL, CW>(
 		&self, 
 		head: &StrTree, 
@@ -136,7 +142,7 @@ impl StrTree {
 		mut word_constraints: CW)
 	-> Vec<String> 
 	where CNbL: ConstraintNbLetters, CL: ConstraintLetters, CW: ConstraintWords {
-		let mut new_current_word = current_word.clone();
+		let new_current_word = |c: char| Self::new_word_with_append(&current_word, c);
 
 		match self.data {
 			None => (),
@@ -147,7 +153,6 @@ impl StrTree {
 						if !head.is_word(&word) { return Vec::<String>::new(); }
 					}
 				}
-				new_current_word.push(c);
 			}
 		};
 
@@ -160,14 +165,14 @@ impl StrTree {
 			return node.get_anagrams_internal(
 				head, 
 				letter_set.clone(),
-				new_current_word.clone(),
+				new_current_word(node.data.unwrap()),
 				nb_letters.clone(),
 				letter_constraints.clone(),
 				word_constraints.clone());
 		}
 
 		let mut ret = Vec::<String>::new();
-		if self.is_word && nb_letters.valid() { ret.push(new_current_word.clone()); }
+		if self.is_word && nb_letters.valid() { ret.push(current_word.clone()); }
 
 		// Case there is no higher up number of letters possible: exit
 		if !nb_letters.decrease() {
@@ -181,7 +186,7 @@ impl StrTree {
 					child.get_anagrams_internal(
 						head, 
 						letter_set[1..].to_vec(), 
-						new_current_word.clone(),
+						new_current_word(child.data.unwrap().to_ascii_uppercase()),
 						nb_letters.clone(),
 						letter_constraints.clone(),
 						word_constraints.clone()));
@@ -201,7 +206,7 @@ impl StrTree {
 					node.get_anagrams_internal(
 						head, 
 						[letter_set[0..i].to_vec(), letter_set[i+1..].to_vec()].concat(), 
-						new_current_word.clone(),
+						new_current_word(node.data.unwrap()),
 						nb_letters.clone(),
 						letter_constraints.clone(),
 						word_constraints.clone()))

@@ -21,7 +21,7 @@ impl WordToFill {
 		return Ok(Self{beginning: begin.clone(), end: end.clone()});
 	}
 
-	fn complete(&self, c: char) -> String {
+	pub fn complete(&self, c: char) -> String {
 		let mut ret = self.beginning.clone();
 		ret.push(c);
 		ret.push_str(&self.end);

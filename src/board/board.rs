@@ -1,10 +1,28 @@
 use crate::board::BoardService;
 use crate::board::{DeserializingError, DeserializingError::*};
+use crate::board::{WordError, WordError::*};
 use crate::board::WordToFill;
 use crate::board::PotentialWordConditionsBuilder;
 
 const SIDE: usize = 15;
 const SIZE: usize = SIDE * SIDE;
+const VALUES: [u8; 26] = [1, 3, 3, 2, 1, 4, 2, 4, 1, 8, 10, 1, 2, 1, 1, 3, 8, 1, 1, 1, 1, 4, 10, 10, 10, 10];
+
+fn get_value_lowercase(c: char) -> usize {
+	VALUES[(c as usize) - ('a' as usize)] as usize
+}
+fn get_value(c: char) -> Result<usize, WordError> {
+	if c.is_ascii_lowercase() {
+		Ok(get_value_lowercase(c))
+	} else if c.is_ascii_uppercase() {
+		Ok(0)
+	} else {
+		Err(NonAsciiChar)
+	}
+}
+fn get_str_value(word: &str) -> Result<usize, WordError> {
+	return word.chars().map(get_value).sum();
+}
 
 #[derive(Copy)]
 #[derive(Clone)]
@@ -39,7 +57,8 @@ impl Tile {
 
 	fn letter(&self) -> Option<char> {
 		match self {
-			Play(LetterTile(c)) | Play(JokerTile(c)) => Some(*c),
+			Play(LetterTile(c)) => Some(*c),
+			Play(JokerTile(c)) => Some(c.to_ascii_uppercase()),
 			_ => None
 		}
 	}
@@ -118,17 +137,19 @@ impl BoardService for Board {
 					conditions.add_nb_letters(nb_letters);
 				}
 				at_least_one_constraints = true;
-				conditions.add_letter(c, relative_y);
+				conditions.add_letter(c.to_ascii_lowercase(), relative_y);
 				continue;
 			}
 
 			// Find letters above and/or below: a word to fill
-			match WordToFill::new(self.get_above(x, absolute_y), self.get_below(x, absolute_y)) {
-				Err(_) => (),
-				Ok(word) => {
-					at_least_one_constraints = true;
-					conditions.add_word(word, relative_y)
-				}
+			match WordToFill::new(
+				self.get_above(x, absolute_y).to_ascii_lowercase(), 
+				self.get_below(x, absolute_y).to_ascii_lowercase()) {
+					Err(_) => (),
+					Ok(word) => {
+						at_least_one_constraints = true;
+						conditions.add_word(word, relative_y)
+					}
 			};
 
 			// add this possible number of letter if any constraint has already been met 
@@ -138,6 +159,51 @@ impl BoardService for Board {
 			}
 		}
 	}
+
+	fn get_score(&self, word: &str, x: usize, y: usize) -> Result<usize, WordError> {
+		let mut word_bonus: usize = 1;
+		let mut word_value: usize = 0;
+		let mut other_words_formed: usize = 0;
+
+		for (c, relative_y) in word.chars().zip(0..word.len()) {
+			let absolute_y = y + relative_y;
+			let mut local_letter_bonus = 1;
+			let mut local_word_bonus = 1;
+
+			word_value += match (c, self.at(x, absolute_y)) {
+				// Case of constraint: there must be a letter on the board
+				('_', Play(JokerTile(_))) => {0; continue},
+				('_', Play(LetterTile(c2))) => {get_value_lowercase(c2); continue},
+				('_', _) => return Err(UnexpectedUnderscore),
+
+				// Case of letter: there must be no letter on the board
+				(_, Board(EmptyTile)) => get_value(c)?,
+				(_, Board(LetterBonusTile(n))) => {
+					local_letter_bonus = n as usize;
+					(n as usize) * get_value(c)?
+				},
+				(_, Board(WordBonusTile(n))) => {
+					local_word_bonus = n as usize;
+					word_bonus *= local_word_bonus;
+					get_value(c)?
+				}
+
+				(_,_) => return Err(TileOccupied)
+			};
+
+			// Find letters above and/or below: a word filled
+			match WordToFill::new(self.get_above(x, absolute_y), self.get_below(x, absolute_y)) {
+				Err(_) => (),
+				Ok(word) => {
+					other_words_formed += 
+						local_word_bonus * get_str_value(&word.complete(c))? + 
+						(local_letter_bonus-1) * get_value(c)?;
+				}
+			};
+		}
+		return Ok(word_value * word_bonus + other_words_formed);
+	}
+
 }
 
 impl Board {

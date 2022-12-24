@@ -13,7 +13,7 @@ where B: BoardService, D: Dictionnary {
 		pw.get_constraint_nb_letters(),
 		pw.get_constraint_letters(),
 		pw.get_constraint_words()) {
-		println!("{}", word);
+		println!("{}, {:?}", word, board.get_score(&word, x, y));
 	}
 	return "".to_string();
 }

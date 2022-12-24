@@ -8,12 +8,25 @@ const SIZE: usize = SIDE * SIDE;
 
 #[derive(Copy)]
 #[derive(Clone)]
-pub enum Tile{
-	EmptyTile,
+pub enum PlayTile {
 	LetterTile(char),
-	JokerTile(char),
+	JokerTile(char)
+}
+use PlayTile::*;
+#[derive(Copy)]
+#[derive(Clone)]
+pub enum BoardTile {
+	EmptyTile,
 	LetterBonusTile(u8),
 	WordBonusTile(u8)
+}
+use BoardTile::*;
+
+#[derive(Copy)]
+#[derive(Clone)]
+pub enum Tile{
+	Play(PlayTile),
+	Board(BoardTile)
 }
 use Tile::*;
 impl Tile {
@@ -26,7 +39,7 @@ impl Tile {
 
 	fn letter(&self) -> Option<char> {
 		match self {
-			LetterTile(c) | JokerTile(c) => Some(*c),
+			Play(LetterTile(c)) | Play(JokerTile(c)) => Some(*c),
 			_ => None
 		}
 	}
@@ -43,11 +56,11 @@ impl BoardService for Board {
 		for x in 0..SIDE {
 			for y in 0..SIDE {
 				message.push( match self.at(x, y) {
-					EmptyTile => '_',
-					LetterTile(c) => c,
-					JokerTile(c) => c.to_ascii_uppercase(),
-					WordBonusTile(n) => (n+3).to_string().chars().nth(0).unwrap(),
-					LetterBonusTile(n) => n.to_string().chars().nth(0).unwrap()
+					Board(EmptyTile) => '_',
+					Play(LetterTile(c)) => c,
+					Play(JokerTile(c)) => c.to_ascii_uppercase(),
+					Board(WordBonusTile(n)) => (n+3).to_string().chars().nth(0).unwrap(),
+					Board(LetterBonusTile(n)) => n.to_string().chars().nth(0).unwrap()
 				});
 				message.push(' ');
 			}
@@ -62,16 +75,16 @@ impl BoardService for Board {
 		let mut tile_nb:usize = 0;
 		for char in message.chars() {
 			board.tiles[tile_nb] = match char {
-				'_' => EmptyTile,
-				'2' => LetterBonusTile(2),
-				'3' => LetterBonusTile(3),
-				'5' => WordBonusTile(2),
-				'6' => WordBonusTile(3),
+				'_' => Board(EmptyTile),
+				'2' => Board(LetterBonusTile(2)),
+				'3' => Board(LetterBonusTile(3)),
+				'5' => Board(WordBonusTile(2)),
+				'6' => Board(WordBonusTile(3)),
 				c => {
 					if c.is_ascii_lowercase() {
-						LetterTile(c)
+						Play(LetterTile(c))
 					} else if c.is_ascii_uppercase() {
-						JokerTile(c.to_ascii_lowercase()) 
+						Play(JokerTile(c.to_ascii_lowercase()) )
 					} else { 
 						return Err(UnknownSymbol); 
 					}
@@ -143,7 +156,7 @@ impl BoardService for Board {
 
 impl Board {
 	fn new_empty() -> Board {
-		return Board{tiles: [EmptyTile; SIZE], transposed: false};
+		return Board{tiles: [Board(EmptyTile); SIZE], transposed: false};
 	}
 
 	// Accessors

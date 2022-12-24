@@ -151,7 +151,7 @@ fn no_letter_actually_used() {
 fn nb_letters_does_not_include_constraints() {
 	let tree = str_tree::build_dict_from_file("src/test/words.txt").expect("File not found");
 	let correct_answer = vec![
-		"barre".to_string()
+		"___re".to_string()
 	];
 
 	assert!(unordered_equal(
@@ -163,31 +163,24 @@ fn nb_letters_does_not_include_constraints() {
 fn letters_constraints() {
 	let tree = str_tree::build_dict_from_file("src/test/words.txt").expect("File not found");
 
-	let empty = &Vec::<String>::new();
-	let mut correct_answer = vec![
-		"arbre".to_string()
-	];
-
 	assert!(unordered_equal(
 		&tree.get_anagrams("arbe", None, Some(vec![(2, 'z')]), None), 
-		empty));
+		&Vec::<String>::new()));
 
 	assert!(unordered_equal(
 		&tree.get_anagrams("rbre", None, Some(vec![(0, 'a')]), None), 
-		&correct_answer));
+		&vec!["_rbre".to_string()]));
 	assert!(unordered_equal(
 		&tree.get_anagrams("arbe", None, Some(vec![(1, 'r')]), None), 
-		&correct_answer));
+		&vec!["a_bre".to_string()]));
 
-	correct_answer.push("barre".to_string());
 	assert!(unordered_equal(
 		&tree.get_anagrams("arbe", None, Some(vec![(3, 'r')]), None), 
-		&correct_answer));
+		&vec!["arb_e".to_string(), "bar_e".to_string()]));
 
-	correct_answer.push("bar".to_string());
 	assert!(unordered_equal(
 		&tree.get_anagrams("arbr", None, Some(vec![(4, 'e')]), None), 
-		&correct_answer));
+		&vec!["arbr_".to_string(), "barr_".to_string(), "bar".to_string()]));
 }
 
 #[test]
@@ -224,7 +217,7 @@ fn words_constraint() {
 fn all_constraints() {
 	let tree = str_tree::build_dict_from_file("src/test/words.txt").expect("File not found");
 	let mut correct_answer = vec![
-		"bar".to_string()
+		"b_r".to_string()
 	];
 
 	assert!(unordered_equal(
@@ -235,7 +228,7 @@ fn all_constraints() {
 			Some(vec![(2, crate::constraints::WordToFill::new("a".to_string(), "bre".to_string()).unwrap())])),
 		&correct_answer));
 
-	correct_answer.push("barre".to_string());
+	correct_answer.push("b_rre".to_string());
 
 	assert!(unordered_equal(
 		&tree.get_anagrams(

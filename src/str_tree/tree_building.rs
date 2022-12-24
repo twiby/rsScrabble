@@ -165,7 +165,7 @@ impl StrTree {
 			return node.get_anagrams_internal(
 				head, 
 				letter_set.clone(),
-				new_current_word(node.data.unwrap()),
+				new_current_word('_'),
 				nb_letters.clone(),
 				letter_constraints.clone(),
 				word_constraints.clone());

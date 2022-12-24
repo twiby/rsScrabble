@@ -9,7 +9,7 @@ pub struct StrTree {
 	children: Vec<StrTree>
 }
 
-impl Dictionnary<StrTree> for StrTree {
+impl Dictionnary for StrTree {
 	fn build_dict_from_file(filename: &str) -> std::io::Result<StrTree> {
 		let mut ret = StrTree::init();
 		match ret.fill_with_file(filename) {

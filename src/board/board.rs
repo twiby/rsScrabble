@@ -37,7 +37,7 @@ impl BoardService for Board {
 		return message;
 	}
 
-	fn deserialize(message: String) -> Result<Board, DeserializingError> {
+	fn deserialize(message: &str) -> Result<Board, DeserializingError> {
 		let mut board = Board::new_empty();
 
 		let mut tile_nb:usize = 0;

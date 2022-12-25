@@ -1,10 +1,10 @@
 [package]
-name = "rusted_tree"
+name = "rsScrabble"
 version = "0.2.0"
 edition = "2021"
 
 [lib]
-name = "rusted_tree"
+name = "rsScrabble"
 
 [dependencies.pyo3]
 version = "0.15.1"

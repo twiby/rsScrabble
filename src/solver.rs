@@ -6,14 +6,41 @@ use crate::board::transposition::*;
 
 use crate::constraints::{PotentialWord, PotentialWordConditions, PotentialWordConditionsBuilder};
 
+use pyo3::prelude::{pyclass, pymethods};
+
 type WordSearchResult = Result<Option<BestWord>, WordError>;
 
 #[derive(Debug)]
+#[pyclass]
 pub struct BestWord {
+	#[pyo3(get)]
 	vertical: bool,
+	#[pyo3(get)]
 	coord: (usize, usize),
+	#[pyo3(get)]
 	word: String,
+	#[pyo3(get)]
 	score: usize
+}
+#[pymethods]
+impl BestWord {
+	fn __str__(&self) -> pyo3::PyResult<String> {
+		let mut ret = "[".to_string();
+		ret.push_str(&self.word);
+		ret.push(']');
+		ret.push_str(" at: (");
+		ret.push_str(&self.coord.0.to_string());
+		ret.push_str(", ");
+		ret.push_str(&self.coord.1.to_string());
+		ret.push_str(") ");
+		if self.vertical {
+			ret.push_str("vertically -> ");
+		} else {
+			ret.push_str("horizontally -> ");
+		}
+		ret.push_str(&self.score.to_string());
+		return Ok(ret);
+	}
 }
 
 pub trait TransposedBool {

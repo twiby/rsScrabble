@@ -42,12 +42,12 @@ pub mod transposition
 
 pub trait BoardService {
 	fn serialize<T: transposition::TransposedState>(&self) -> String;
-	fn deserialize(message: String) -> Result<Board, DeserializingError>;
+	fn deserialize(message: &str) -> Result<Board, DeserializingError>;
 	fn get_conditions<T: transposition::TransposedState, PWCB>(&self, x: usize, y: usize, conditions: &mut PWCB)
 	where PWCB: PotentialWordConditionsBuilder;
 	fn get_score<T: transposition::TransposedState>(&self, word: &str, x: usize, y: usize) -> Result<usize, WordError>;
 }
 
-pub fn deserialize(message: String) -> Result<Board, DeserializingError> {
+pub fn deserialize(message: &str) -> Result<Board, DeserializingError> {
 	return Board::deserialize(message.clone());
 }

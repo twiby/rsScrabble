@@ -58,6 +58,6 @@ fn main() {
 	str_board.push_str("_5___3___3___5_");
 	str_board.push_str("6__2___6___2__6");
 
-	let board = board::deserialize(str_board).expect("Error when deserializing board message");
+	let board = board::deserialize(&str_board).expect("Error when deserializing board message");
 	println!("{:?}", solver::find_best_word("systeme", &board, tree_ref));
 }

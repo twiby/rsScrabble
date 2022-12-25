@@ -275,10 +275,10 @@ fn board_serialization() {
 	str_board.push_str("_5___3___3___5_");
 	str_board.push_str("6__2___6___2__");
 
-	let b = board::deserialize(str_board.clone()).expect_err("Unlikely Success");
+	let b = board::deserialize(&str_board).expect_err("Unlikely Success");
 	assert_eq!(b, DeserializingError::WrongLength);
 	str_board.push('!');
-	let b2 = board::deserialize(str_board.clone()).expect_err("Unlikely success");
+	let b2 = board::deserialize(&str_board).expect_err("Unlikely success");
 	assert_eq!(b2, DeserializingError::UnknownSymbol);
 }
 
@@ -301,7 +301,7 @@ fn get_conditions_vertical() {
 	str_board.push_str("_5___3___3___5_");
 	str_board.push_str("6__2___6___2__6");
 
-	let board = board::deserialize(str_board).expect("Error when deserializing board message");
+	let board = board::deserialize(&str_board).expect("Error when deserializing board message");
 	let mut pw = constraints::PotentialWord::new();
 
 	board.get_conditions::<NotTransposed, _>(10, 0, &mut pw);
@@ -354,7 +354,7 @@ fn get_conditions_horizontal() {
 	str_board.push_str("_5___3___3___5_");
 	str_board.push_str("6__2___6___2__6");
 
-	let board = board::deserialize(str_board).expect("Error when deserializing board message");
+	let board = board::deserialize(&str_board).expect("Error when deserializing board message");
 	let mut pw = constraints::PotentialWord::new();
 
 	board.get_conditions::<NotTransposed, _>(10, 0, &mut pw);
@@ -392,7 +392,7 @@ fn get_score() {
 	str_board.push_str("_5___3___3___5_");
 	str_board.push_str("6__2___6___2__6");
 
-	let board = board::deserialize(str_board).expect("Error when deserializing board message");
+	let board = board::deserialize(&str_board).expect("Error when deserializing board message");
 
 	assert_eq!(7, board.get_score::<NotTransposed>("te_se", 10, 5).unwrap());
 	assert_eq!(6, board.get_score::<NotTransposed>("tE_se", 10, 5).unwrap());
@@ -425,7 +425,7 @@ fn get_score_errors() {
 	str_board.push_str("_5___3___3___5_");
 	str_board.push_str("6__2___6___2__6");
 
-	let board = board::deserialize(str_board).expect("Error when deserializing board message");
+	let board = board::deserialize(&str_board).expect("Error when deserializing board message");
 
 	assert_eq!(Err(WordError::TileOccupied), board.get_score::<NotTransposed>("terse", 10, 5));
 	assert_eq!(Err(WordError::UnexpectedUnderscore), board.get_score::<NotTransposed>("tE_s_", 10, 5));

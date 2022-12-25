@@ -5,16 +5,18 @@ pub use crate::constraints::WordToFill;
 pub use crate::constraints::PotentialWordConditionsBuilder;
 
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub enum DeserializingError {
 	UnknownSymbol,
 	WrongLength
 }
 
 #[derive(Debug)]
+#[derive(PartialEq)]
 pub enum WordError {
 	TileOccupied,
 	UnexpectedUnderscore,
-	NonAsciiChar
+	UnknownChar
 } 
 
 pub trait BoardService {

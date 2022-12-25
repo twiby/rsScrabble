@@ -17,7 +17,7 @@ fn get_value(c: char) -> Result<usize, WordError> {
 	} else if c.is_ascii_uppercase() {
 		Ok(0)
 	} else {
-		Err(NonAsciiChar)
+		Err(UnknownChar)
 	}
 }
 fn get_str_value(word: &str) -> Result<usize, WordError> {
@@ -26,6 +26,7 @@ fn get_str_value(word: &str) -> Result<usize, WordError> {
 
 #[derive(Copy)]
 #[derive(Clone)]
+#[derive(Debug)]
 pub enum PlayedTile {
 	LetterTile(char),
 	JokerTile(char)
@@ -33,6 +34,7 @@ pub enum PlayedTile {
 use PlayedTile::*;
 #[derive(Copy)]
 #[derive(Clone)]
+#[derive(Debug)]
 pub enum BoardTile {
 	EmptyTile,
 	LetterBonusTile(u8),
@@ -42,6 +44,7 @@ use BoardTile::*;
 
 #[derive(Copy)]
 #[derive(Clone)]
+#[derive(Debug)]
 pub enum Tile{
 	Played(PlayedTile),
 	Board(BoardTile)
@@ -64,6 +67,7 @@ impl Tile {
 	}
 }
 
+#[derive(Debug)]
 pub struct Board {
 	tiles: [Tile; SIZE],
 	transposed: bool

@@ -249,9 +249,37 @@ fn all_constraints() {
 
 use crate::board;
 use crate::board::BoardService;
+use crate::board::DeserializingError;
+
 
 use crate::constraints;
 use crate::constraints::{WordToFill, PotentialWordConditions, PotentialWordConditionsBuilder};
+
+#[test]
+fn board_serialization() {
+	let mut str_board = "".to_string();
+	str_board.push_str("6__2___6___2__6");
+	str_board.push_str("_5___3___3___5_");
+	str_board.push_str("__5___2_2___5__");
+	str_board.push_str("2__5___2___5__2");
+	str_board.push_str("____5_____5____");
+	str_board.push_str("_3___3___3___3_");
+	str_board.push_str("__2___2_2___2__");
+	str_board.push_str("6__2___a___2__6");
+	str_board.push_str("__2___2r2___2__");
+	str_board.push_str("_3___3_b_3___3_");
+	str_board.push_str("____5__R__5____");
+	str_board.push_str("2__5___e___5__2");
+	str_board.push_str("__5___2_2___5__");
+	str_board.push_str("_5___3___3___5_");
+	str_board.push_str("6__2___6___2__");
+
+	let b = board::deserialize(str_board.clone()).expect_err("Unlikely Success");
+	assert_eq!(b, DeserializingError::WrongLength);
+	str_board.push('!');
+	let b2 = board::deserialize(str_board.clone()).expect_err("Unlikely success");
+	assert_eq!(b2, DeserializingError::UnknownSymbol);
+}
 
 #[test]
 fn get_conditions_vertical() {
@@ -342,4 +370,63 @@ fn get_conditions_horizontal() {
 	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![1,2,3,4,5]));
 	assert_eq!(pw.get_constraint_letters(), Some(Vec::<(u8, char)>::new()));
 	assert_eq!(pw.get_constraint_words(), Some(vec![(0, WordToFill::new("r".to_string(), "".to_string()).unwrap()),(1, WordToFill::new("e".to_string(), "".to_string()).unwrap())]));
+}
+
+#[test]
+fn get_score() {
+	let mut str_board = "".to_string();
+	str_board.push_str("6__2___6___2__6");
+	str_board.push_str("_5___3___3___5_");
+	str_board.push_str("__5___2_2___5__");
+	str_board.push_str("2__5___2___5__2");
+	str_board.push_str("____5_____5____");
+	str_board.push_str("_3___3___3___3_");
+	str_board.push_str("__2___2_2___2__");
+	str_board.push_str("6__2___a___2__6");
+	str_board.push_str("__2___2r2___2__");
+	str_board.push_str("_3___3_bE3___3_");
+	str_board.push_str("____5__R2_5____");
+	str_board.push_str("2__5___e___5__2");
+	str_board.push_str("__5___2_2___5__");
+	str_board.push_str("_5___3___3___5_");
+	str_board.push_str("6__2___6___2__6");
+
+	let board = board::deserialize(str_board).expect("Error when deserializing board message");
+	println!("{}", board.serialize());
+
+	assert_eq!(7, board.get_score("te_se", 10, 5).unwrap());
+	assert_eq!(6, board.get_score("tE_se", 10, 5).unwrap());
+	assert_eq!(3, board.get_score("te_Se", 10, 5).unwrap());
+	assert_eq!(14, board.get_score("te_ses", 10, 5).unwrap());
+	assert_eq!(8, board.get_score("te_Ses", 10, 5).unwrap());
+	assert_eq!(32, board.get_score("te_fes", 10, 5).unwrap());
+}
+
+use crate::board::WordError;
+
+#[test]
+fn get_score_errors() {
+	let mut str_board = "".to_string();
+	str_board.push_str("6__2___6___2__6");
+	str_board.push_str("_5___3___3___5_");
+	str_board.push_str("__5___2_2___5__");
+	str_board.push_str("2__5___2___5__2");
+	str_board.push_str("____5_____5____");
+	str_board.push_str("_3___3___3___3_");
+	str_board.push_str("__2___2_2___2__");
+	str_board.push_str("6__2___a___2__6");
+	str_board.push_str("__2___2r2___2__");
+	str_board.push_str("_3___3_bE3___3_");
+	str_board.push_str("____5__R2_5____");
+	str_board.push_str("2__5___e___5__2");
+	str_board.push_str("__5___2_2___5__");
+	str_board.push_str("_5___3___3___5_");
+	str_board.push_str("6__2___6___2__6");
+
+	let board = board::deserialize(str_board).expect("Error when deserializing board message");
+	println!("{}", board.serialize());
+
+	assert_eq!(Err(WordError::TileOccupied), board.get_score("terse", 10, 5));
+	assert_eq!(Err(WordError::UnexpectedUnderscore), board.get_score("tE_s_", 10, 5));
+	assert_eq!(Err(WordError::UnknownChar), board.get_score("tE_s!", 10, 5));
 }

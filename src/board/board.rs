@@ -10,21 +10,22 @@ use Tile::*;
 use PlayedTile::*;
 use BoardTile::*;
 
+use crate::board::transposition::*;
+
 const SIDE: usize = 15;
 const SIZE: usize = SIDE * SIDE;
 
 #[derive(Debug)]
 pub struct Board {
-	tiles: [Tile; SIZE],
-	transposed: bool
+	tiles: [Tile; SIZE]
 }
 
 impl BoardService for Board {
-	fn serialize(&self) -> String {
+	fn serialize<T: TransposedState>(&self) -> String {
 		let mut message = "".to_string();
 		for x in 0..SIDE {
 			for y in 0..SIDE {
-				message.push( match self.at(x, y) {
+				message.push( match self.at::<T>(x, y) {
 					Board(EmptyTile) => '_',
 					Played(LetterTile(c)) => c,
 					Played(JokerTile(c)) => c.to_ascii_uppercase(),
@@ -68,11 +69,11 @@ impl BoardService for Board {
 		return Ok(board);
 	}
 
-	fn get_conditions<T>(&self, x: usize, y: usize, conditions: &mut T)
-	where T: PotentialWordConditionsBuilder {
+	fn get_conditions<T: TransposedState, PWCB>(&self, x: usize, y: usize, conditions: &mut PWCB)
+	where PWCB: PotentialWordConditionsBuilder {
 		conditions.reset();
 
-		if y > 0 && self.at(x, y-1).is_occupied() { return; }
+		if y > 0 && self.at::<T>(x, y-1).is_occupied() { return; }
 
 		let mut nb_letters = 0;
 		let mut at_least_one_constraints = false;
@@ -81,7 +82,7 @@ impl BoardService for Board {
 			let absolute_y = y + relative_y as usize;
 
 			// Case: tile is occupied: register letter and continue
-			if let Some(c) = self.at(x, absolute_y).letter() {
+			if let Some(c) = self.at::<T>(x, absolute_y).letter() {
 				// Special case: if first constraint, previous nb_letter is acceptable
 				if !at_least_one_constraints {
 					conditions.add_nb_letters(nb_letters);
@@ -93,8 +94,8 @@ impl BoardService for Board {
 
 			// Find letters above and/or below: a word to fill
 			match WordToFill::new(
-				self.get_above(x, absolute_y).to_ascii_lowercase(), 
-				self.get_below(x, absolute_y).to_ascii_lowercase()) {
+				self.get_above::<T>(x, absolute_y).to_ascii_lowercase(), 
+				self.get_below::<T>(x, absolute_y).to_ascii_lowercase()) {
 					Err(_) => (),
 					Ok(word) => {
 						at_least_one_constraints = true;
@@ -110,7 +111,7 @@ impl BoardService for Board {
 		}
 	}
 
-	fn get_score(&self, word: &str, x: usize, y: usize) -> Result<usize, WordError> {
+	fn get_score<T: TransposedState>(&self, word: &str, x: usize, y: usize) -> Result<usize, WordError> {
 		let mut word_bonus: usize = 1;
 		let mut word_value: usize = 0;
 		let mut other_words_formed: usize = 0;
@@ -120,7 +121,7 @@ impl BoardService for Board {
 			let mut local_letter_bonus = 1;
 			let mut local_word_bonus = 1;
 
-			word_value += match (c, self.at(x, absolute_y)) {
+			word_value += match (c, self.at::<T>(x, absolute_y)) {
 				// Case of constraint: there must be a letter on the board
 				('_', Played(JokerTile(_))) => {0; continue},
 				('_', Played(LetterTile(c2))) => {get_value_lowercase(c2); continue},
@@ -142,7 +143,7 @@ impl BoardService for Board {
 			};
 
 			// Find letters above and/or below: a word filled
-			match WordToFill::new(self.get_above(x, absolute_y), self.get_below(x, absolute_y)) {
+			match WordToFill::new(self.get_above::<T>(x, absolute_y), self.get_below::<T>(x, absolute_y)) {
 				Err(_) => (),
 				Ok(word) => {
 					other_words_formed += 
@@ -157,28 +158,26 @@ impl BoardService for Board {
 
 impl Board {
 	fn new_empty() -> Board {
-		return Board{tiles: [Board(EmptyTile); SIZE], transposed: false};
+		return Board{tiles: [Board(EmptyTile); SIZE]};
 	}
 
 	// Accessors
-	fn at(&self, x: usize, y:usize) -> Tile {
-		let t = self.transposed as usize;
-		let x_transposed = x*(1-t) + y*t;
-		let y_transposed = x*t + y*(1-t);
+	fn at<T: TransposedState>(&self, x: usize, y:usize) -> Tile {
+		let (x_transposed, y_transposed) = T::transposed_coord(x, y);
 		return self.tiles[x_transposed*SIDE + y_transposed];
 	}
 	#[allow(dead_code)]
-	fn at_nopanic(&self, x: usize, y: usize) -> Option<Tile> {
+	fn at_nopanic<T: TransposedState>(&self, x: usize, y: usize) -> Option<Tile> {
 		if x >= SIDE || y >= SIDE {
 			return None;
 		}
-		return Some(self.at(x, y));
+		return Some(self.at::<T>(x, y));
 	}
 
-	fn get_above(&self, x: usize, y: usize) -> String {
+	fn get_above<T: TransposedState>(&self, x: usize, y: usize) -> String {
 		let mut above = "".to_string();
 		for xx in 1u8..(x as u8) {
-			match self.at(x-xx as usize, y).letter() {
+			match self.at::<T>(x-xx as usize, y).letter() {
 				Some(c) => above.push(c),
 				None => break
 			};
@@ -187,10 +186,10 @@ impl Board {
 		return above.chars().rev().collect::<String>();
 	}
 
-	fn get_below(&self, x: usize, y: usize) -> String {
+	fn get_below<T: TransposedState>(&self, x: usize, y: usize) -> String {
 		let mut below = "".to_string();
 		for xx in 1u8..((SIDE-x) as u8) {
-			match self.at(x+xx as usize, y).letter() {
+			match self.at::<T>(x+xx as usize, y).letter() {
 				Some(c) => below.push(c),
 				None => break
 			};

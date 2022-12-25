@@ -251,6 +251,7 @@ use crate::board;
 use crate::board::BoardService;
 use crate::board::DeserializingError;
 
+use crate::board::transposition::*;
 
 use crate::constraints;
 use crate::constraints::{WordToFill, PotentialWordConditions, PotentialWordConditionsBuilder};
@@ -303,32 +304,32 @@ fn get_conditions_vertical() {
 	let board = board::deserialize(str_board).expect("Error when deserializing board message");
 	let mut pw = constraints::PotentialWord::new();
 
-	board.get_conditions(10, 0, &mut pw);
+	board.get_conditions::<NotTransposed, _>(10, 0, &mut pw);
 	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![7,8,9,10,11,12,13,14]));
 	assert_eq!(pw.get_constraint_letters(), Some(vec![(7, 'r')]));
 	assert_eq!(pw.get_constraint_words(), Some(Vec::<(u8, WordToFill)>::new()));
 
-	board.get_conditions(11, 0, &mut pw);
+	board.get_conditions::<NotTransposed, _>(11, 0, &mut pw);
 	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![7,8,9,10,11,12,13,14]));
 	assert_eq!(pw.get_constraint_letters(), Some(vec![(7, 'e')]));
 	assert_eq!(pw.get_constraint_words(), Some(Vec::<(u8, WordToFill)>::new()));
 
-	board.get_conditions(12, 0, &mut pw);
+	board.get_conditions::<NotTransposed, _>(12, 0, &mut pw);
 	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![8,9,10,11,12,13,14,15]));
 	assert_eq!(pw.get_constraint_letters(), Some(Vec::<(u8, char)>::new()));
 	assert_eq!(pw.get_constraint_words(), Some(vec![(7, WordToFill::new("arbre".to_string(), "".to_string()).unwrap())]));
 
-	board.get_conditions(6, 0, &mut pw);
+	board.get_conditions::<NotTransposed, _>(6, 0, &mut pw);
 	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![8,9,10,11,12,13,14,15]));
 	assert_eq!(pw.get_constraint_letters(), Some(Vec::<(u8, char)>::new()));
 	assert_eq!(pw.get_constraint_words(), Some(vec![(7, WordToFill::new("".to_string(), "arbre".to_string()).unwrap())]));
 
-	board.get_conditions(11, 7, &mut pw);
+	board.get_conditions::<NotTransposed, _>(11, 7, &mut pw);
 	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![0,1,2,3,4,5,6,7]));
 	assert_eq!(pw.get_constraint_letters(), Some(vec![(0, 'e')]));
 	assert_eq!(pw.get_constraint_words(), Some(Vec::<(u8, WordToFill)>::new()));
 
-	board.get_conditions(11, 8, &mut pw);
+	board.get_conditions::<NotTransposed, _>(11, 8, &mut pw);
 	assert_eq!(pw.get_constraint_nb_letters(), Some(Vec::<u8>::new()));
 	assert_eq!(pw.get_constraint_letters(), Some(Vec::<(u8, char)>::new()));
 	assert_eq!(pw.get_constraint_words(), Some(Vec::<(u8, WordToFill)>::new()));
@@ -356,17 +357,17 @@ fn get_conditions_horizontal() {
 	let board = board::deserialize(str_board).expect("Error when deserializing board message");
 	let mut pw = constraints::PotentialWord::new();
 
-	board.get_conditions(10, 0, &mut pw);
+	board.get_conditions::<NotTransposed, _>(10, 0, &mut pw);
 	assert_eq!(pw.get_constraint_nb_letters(), Some(Vec::<u8>::new()));
 	assert_eq!(pw.get_constraint_letters(), Some(Vec::<(u8, char)>::new()));
 	assert_eq!(pw.get_constraint_words(), Some(Vec::<(u8, WordToFill)>::new()));
 
-	board.get_conditions(7, 0, &mut pw);
+	board.get_conditions::<NotTransposed, _>(7, 0, &mut pw);
 	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![7,8,9,10]));
 	assert_eq!(pw.get_constraint_letters(), Some(vec![(7, 'a'),(8, 'r'),(9, 'b'),(10, 'r'),(11, 'e')]));
 	assert_eq!(pw.get_constraint_words(), Some(Vec::<(u8, WordToFill)>::new()));
 
-	board.get_conditions(8, 10, &mut pw);
+	board.get_conditions::<NotTransposed, _>(8, 10, &mut pw);
 	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![1,2,3,4,5]));
 	assert_eq!(pw.get_constraint_letters(), Some(Vec::<(u8, char)>::new()));
 	assert_eq!(pw.get_constraint_words(), Some(vec![(0, WordToFill::new("r".to_string(), "".to_string()).unwrap()),(1, WordToFill::new("e".to_string(), "".to_string()).unwrap())]));
@@ -392,14 +393,14 @@ fn get_score() {
 	str_board.push_str("6__2___6___2__6");
 
 	let board = board::deserialize(str_board).expect("Error when deserializing board message");
-	println!("{}", board.serialize());
 
-	assert_eq!(7, board.get_score("te_se", 10, 5).unwrap());
-	assert_eq!(6, board.get_score("tE_se", 10, 5).unwrap());
-	assert_eq!(3, board.get_score("te_Se", 10, 5).unwrap());
-	assert_eq!(14, board.get_score("te_ses", 10, 5).unwrap());
-	assert_eq!(8, board.get_score("te_Ses", 10, 5).unwrap());
-	assert_eq!(32, board.get_score("te_fes", 10, 5).unwrap());
+	assert_eq!(7, board.get_score::<NotTransposed>("te_se", 10, 5).unwrap());
+	assert_eq!(6, board.get_score::<NotTransposed>("tE_se", 10, 5).unwrap());
+	assert_eq!(3, board.get_score::<NotTransposed>("te_Se", 10, 5).unwrap());
+	assert_eq!(14, board.get_score::<NotTransposed>("te_ses", 10, 5).unwrap());
+	assert_eq!(8, board.get_score::<NotTransposed>("te_Ses", 10, 5).unwrap());
+	assert_eq!(32, board.get_score::<NotTransposed>("te_fes", 10, 5).unwrap());
+	assert_eq!(18, board.get_score::<Transposed>("messe", 9, 5).unwrap());
 }
 
 use crate::board::WordError;
@@ -424,9 +425,8 @@ fn get_score_errors() {
 	str_board.push_str("6__2___6___2__6");
 
 	let board = board::deserialize(str_board).expect("Error when deserializing board message");
-	println!("{}", board.serialize());
 
-	assert_eq!(Err(WordError::TileOccupied), board.get_score("terse", 10, 5));
-	assert_eq!(Err(WordError::UnexpectedUnderscore), board.get_score("tE_s_", 10, 5));
-	assert_eq!(Err(WordError::UnknownChar), board.get_score("tE_s!", 10, 5));
+	assert_eq!(Err(WordError::TileOccupied), board.get_score::<NotTransposed>("terse", 10, 5));
+	assert_eq!(Err(WordError::UnexpectedUnderscore), board.get_score::<NotTransposed>("tE_s_", 10, 5));
+	assert_eq!(Err(WordError::UnknownChar), board.get_score::<NotTransposed>("tE_s!", 10, 5));
 }

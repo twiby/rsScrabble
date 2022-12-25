@@ -26,11 +26,11 @@ fn get_str_value(word: &str) -> Result<usize, WordError> {
 
 #[derive(Copy)]
 #[derive(Clone)]
-pub enum PlayTile {
+pub enum PlayedTile {
 	LetterTile(char),
 	JokerTile(char)
 }
-use PlayTile::*;
+use PlayedTile::*;
 #[derive(Copy)]
 #[derive(Clone)]
 pub enum BoardTile {
@@ -43,7 +43,7 @@ use BoardTile::*;
 #[derive(Copy)]
 #[derive(Clone)]
 pub enum Tile{
-	Play(PlayTile),
+	Played(PlayedTile),
 	Board(BoardTile)
 }
 use Tile::*;
@@ -57,8 +57,8 @@ impl Tile {
 
 	fn letter(&self) -> Option<char> {
 		match self {
-			Play(LetterTile(c)) => Some(*c),
-			Play(JokerTile(c)) => Some(c.to_ascii_uppercase()),
+			Played(LetterTile(c)) => Some(*c),
+			Played(JokerTile(c)) => Some(c.to_ascii_uppercase()),
 			_ => None
 		}
 	}
@@ -76,8 +76,8 @@ impl BoardService for Board {
 			for y in 0..SIDE {
 				message.push( match self.at(x, y) {
 					Board(EmptyTile) => '_',
-					Play(LetterTile(c)) => c,
-					Play(JokerTile(c)) => c.to_ascii_uppercase(),
+					Played(LetterTile(c)) => c,
+					Played(JokerTile(c)) => c.to_ascii_uppercase(),
 					Board(WordBonusTile(n)) => (n+3).to_string().chars().nth(0).unwrap(),
 					Board(LetterBonusTile(n)) => n.to_string().chars().nth(0).unwrap()
 				});
@@ -101,9 +101,9 @@ impl BoardService for Board {
 				'6' => Board(WordBonusTile(3)),
 				c => {
 					if c.is_ascii_lowercase() {
-						Play(LetterTile(c))
+						Played(LetterTile(c))
 					} else if c.is_ascii_uppercase() {
-						Play(JokerTile(c.to_ascii_lowercase()) )
+						Played(JokerTile(c.to_ascii_lowercase()) )
 					} else { 
 						return Err(UnknownSymbol); 
 					}
@@ -172,15 +172,15 @@ impl BoardService for Board {
 
 			word_value += match (c, self.at(x, absolute_y)) {
 				// Case of constraint: there must be a letter on the board
-				('_', Play(JokerTile(_))) => {0; continue},
-				('_', Play(LetterTile(c2))) => {get_value_lowercase(c2); continue},
+				('_', Played(JokerTile(_))) => {0; continue},
+				('_', Played(LetterTile(c2))) => {get_value_lowercase(c2); continue},
 				('_', _) => return Err(UnexpectedUnderscore),
 
 				// Case of letter: there must be no letter on the board
 				(_, Board(EmptyTile)) => get_value(c)?,
 				(_, Board(LetterBonusTile(n))) => {
 					local_letter_bonus = n as usize;
-					(n as usize) * get_value(c)?
+					local_letter_bonus * get_value(c)?
 				},
 				(_, Board(WordBonusTile(n))) => {
 					local_word_bonus = n as usize;

@@ -30,14 +30,14 @@ fn _find_best_word_at<T, B, D>(
 	letter_set: &str, 
 	x: usize, y: usize, 
 	board: &B, 
-	dict: &D) 
+	dict: &D, 
+	pw: &mut PotentialWord) 
 -> WordSearchResult
 where B: BoardService, D: Dictionnary, T: TransposedState + TransposedBool {
-	let mut pw = PotentialWord::new();
 	let mut best_word: String = "".to_string();
 	let mut best_score = 0;
 
-	board.get_conditions::<T, _>(x, y, &mut pw);
+	board.get_conditions::<T, _>(x, y, pw);
 
 	for word in dict.get_anagrams(
 		letter_set, 
@@ -63,10 +63,16 @@ where B: BoardService, D: Dictionnary, T: TransposedState + TransposedBool {
 	}
 }
 
-fn find_best_word_at<B, D>(letter_set: &str, x: usize, y: usize, board: &B, dict: &D) -> WordSearchResult
+fn find_best_word_at<B, D>(
+	letter_set: &str, 
+	x: usize, y: usize, 
+	board: &B, 
+	dict: &D, 
+	pw: &mut PotentialWord) 
+-> WordSearchResult
 where B: BoardService, D: Dictionnary {
-	let bw_horizontal = _find_best_word_at::<NotTransposed, _, _>(letter_set, x, y, board, dict)?;
-	let bw_vertical = _find_best_word_at::<Transposed, _, _>(letter_set, x, y, board, dict)?;
+	let bw_horizontal = _find_best_word_at::<NotTransposed, _, _>(letter_set, x, y, board, dict, pw)?;
+	let bw_vertical = _find_best_word_at::<Transposed, _, _>(letter_set, x, y, board, dict, pw)?;
 	
 	match (&bw_horizontal, &bw_vertical) {
 		(None, None) => Ok(None),
@@ -82,15 +88,18 @@ where B: BoardService, D: Dictionnary {
 	}
 }
 
-pub fn find_best_word<B, D>(letter_set: &str, board: &B, dict: &D) -> WordSearchResult
+pub fn find_best_word<B, D>(
+	letter_set: &str, 
+	board: &B, 
+	dict: &D) 
+-> WordSearchResult
 where B: BoardService, D: Dictionnary {
-	println!("{}", board.serialize::<NotTransposed>());
-
 	let mut best_word:Option<BestWord> = None;
+	let mut pw = PotentialWord::new();
 
 	for x in 0..crate::board::SIDE {
 		for y in 0..crate::board::SIDE {
-			if let Some(bw) = find_best_word_at(letter_set, x, y, board, dict)? {
+			if let Some(bw) = find_best_word_at(letter_set, x, y, board, dict, &mut pw)? {
 				best_word = match best_word {
 					None => Some(bw),
 					Some(ref word) => {

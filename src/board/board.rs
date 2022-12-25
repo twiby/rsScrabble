@@ -114,6 +114,8 @@ impl BoardService for Board {
 		let mut word_value: usize = 0;
 		let mut other_words_formed: usize = 0;
 
+		let mut nb_letters = 0;
+
 		for (c, relative_y) in word.chars().zip(0..word.len()) {
 			let absolute_y = y + relative_y;
 			let mut local_letter_bonus = 1;
@@ -126,12 +128,17 @@ impl BoardService for Board {
 				('_', _) => return Err(UnexpectedUnderscore),
 
 				// Case of letter: there must be no letter on the board
-				(_, Board(EmptyTile)) => get_value(c)?,
+				(_, Board(EmptyTile)) => {
+					nb_letters += 1;
+					get_value(c)?
+				},
 				(_, Board(LetterBonusTile(n))) => {
+					nb_letters += 1;
 					local_letter_bonus = n as usize;
 					local_letter_bonus * get_value(c)?
 				},
 				(_, Board(WordBonusTile(n))) => {
+					nb_letters += 1;
 					local_word_bonus = n as usize;
 					word_bonus *= local_word_bonus;
 					get_value(c)?
@@ -150,6 +157,11 @@ impl BoardService for Board {
 				}
 			};
 		}
+
+		if nb_letters == 7 {
+			other_words_formed += 50;
+		}
+
 		return Ok(word_value * word_bonus + other_words_formed);
 	}
 }

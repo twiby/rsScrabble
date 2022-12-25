@@ -401,6 +401,7 @@ fn get_score() {
 	assert_eq!(8, board.get_score::<NotTransposed>("te_Ses", 10, 5).unwrap());
 	assert_eq!(32, board.get_score::<NotTransposed>("te_fes", 10, 5).unwrap());
 	assert_eq!(18, board.get_score::<Transposed>("messe", 9, 5).unwrap());
+	assert_eq!(124, board.get_score::<Transposed>("systeme", 9, 8).unwrap());
 }
 
 use crate::board::WordError;

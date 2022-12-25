@@ -4,68 +4,14 @@ use crate::board::{WordError, WordError::*};
 use crate::board::WordToFill;
 use crate::board::PotentialWordConditionsBuilder;
 
-const SIDE: usize = 15;
-const SIZE: usize = SIDE * SIDE;
-const VALUES: [u8; 26] = [1, 3, 3, 2, 1, 4, 2, 4, 1, 8, 10, 1, 2, 1, 1, 3, 8, 1, 1, 1, 1, 4, 10, 10, 10, 10];
-
-fn get_value_lowercase(c: char) -> usize {
-	VALUES[(c as usize) - ('a' as usize)] as usize
-}
-fn get_value(c: char) -> Result<usize, WordError> {
-	if c.is_ascii_lowercase() {
-		Ok(get_value_lowercase(c))
-	} else if c.is_ascii_uppercase() {
-		Ok(0)
-	} else {
-		Err(UnknownChar)
-	}
-}
-fn get_str_value(word: &str) -> Result<usize, WordError> {
-	return word.chars().map(get_value).sum();
-}
-
-#[derive(Copy)]
-#[derive(Clone)]
-#[derive(Debug)]
-pub enum PlayedTile {
-	LetterTile(char),
-	JokerTile(char)
-}
+use crate::board::values::*;
+use crate::board::tile::*;
+use Tile::*;
 use PlayedTile::*;
-#[derive(Copy)]
-#[derive(Clone)]
-#[derive(Debug)]
-pub enum BoardTile {
-	EmptyTile,
-	LetterBonusTile(u8),
-	WordBonusTile(u8)
-}
 use BoardTile::*;
 
-#[derive(Copy)]
-#[derive(Clone)]
-#[derive(Debug)]
-pub enum Tile{
-	Played(PlayedTile),
-	Board(BoardTile)
-}
-use Tile::*;
-impl Tile {
-	fn is_occupied(&self) -> bool {
-		match self.letter() {
-			None => false,
-			Some(_) => true
-		}
-	}
-
-	fn letter(&self) -> Option<char> {
-		match self {
-			Played(LetterTile(c)) => Some(*c),
-			Played(JokerTile(c)) => Some(c.to_ascii_uppercase()),
-			_ => None
-		}
-	}
-}
+const SIDE: usize = 15;
+const SIZE: usize = SIDE * SIDE;
 
 #[derive(Debug)]
 pub struct Board {
@@ -207,7 +153,6 @@ impl BoardService for Board {
 		}
 		return Ok(word_value * word_bonus + other_words_formed);
 	}
-
 }
 
 impl Board {
@@ -252,8 +197,4 @@ impl Board {
 		}
 		return below;
 	}
-
-	// fn transpose(&mut self) {
-	// 	self.transposed = !self.transposed;
-	// }
 }

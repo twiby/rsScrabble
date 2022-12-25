@@ -1,6 +1,9 @@
 mod board;
 use board::Board;
 
+mod values;
+mod tile;
+
 pub use crate::constraints::WordToFill;
 pub use crate::constraints::PotentialWordConditionsBuilder;
 

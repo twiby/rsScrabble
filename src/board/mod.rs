@@ -7,6 +7,9 @@ mod tile;
 pub use crate::constraints::WordToFill;
 pub use crate::constraints::PotentialWordConditionsBuilder;
 
+pub const SIDE: usize = 15;
+pub const SIZE: usize = SIDE * SIDE;
+
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub enum DeserializingError {

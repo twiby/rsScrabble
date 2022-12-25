@@ -3,6 +3,7 @@ use crate::board::{DeserializingError, DeserializingError::*};
 use crate::board::{WordError, WordError::*};
 use crate::board::WordToFill;
 use crate::board::PotentialWordConditionsBuilder;
+use crate::board::{SIDE, SIZE};
 
 use crate::board::values::*;
 use crate::board::tile::*;
@@ -11,9 +12,6 @@ use PlayedTile::*;
 use BoardTile::*;
 
 use crate::board::transposition::*;
-
-const SIDE: usize = 15;
-const SIZE: usize = SIDE * SIDE;
 
 #[derive(Debug)]
 pub struct Board {

@@ -90,6 +90,8 @@ impl BoardService for Board {
 				continue;
 			}
 
+			if nb_letters == 7 { return; }
+
 			// Find letters above and/or below: a word to fill
 			match WordToFill::new(
 				self.get_above::<T>(x, absolute_y).to_ascii_lowercase(), 

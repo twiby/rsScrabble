@@ -305,24 +305,24 @@ fn get_conditions_vertical() {
 	let mut pw = constraints::PotentialWord::new();
 
 	board.get_conditions::<NotTransposed, _>(10, 0, &mut pw);
-	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![7,8,9,10,11,12,13,14]));
+	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![7]));
 	assert_eq!(pw.get_constraint_letters(), Some(vec![(7, 'r')]));
 	assert_eq!(pw.get_constraint_words(), Some(Vec::<(u8, WordToFill)>::new()));
 
 	board.get_conditions::<NotTransposed, _>(11, 0, &mut pw);
-	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![7,8,9,10,11,12,13,14]));
+	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![7]));
 	assert_eq!(pw.get_constraint_letters(), Some(vec![(7, 'e')]));
 	assert_eq!(pw.get_constraint_words(), Some(Vec::<(u8, WordToFill)>::new()));
 
 	board.get_conditions::<NotTransposed, _>(12, 0, &mut pw);
-	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![8,9,10,11,12,13,14,15]));
+	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![]));
 	assert_eq!(pw.get_constraint_letters(), Some(Vec::<(u8, char)>::new()));
-	assert_eq!(pw.get_constraint_words(), Some(vec![(7, WordToFill::new("arbre".to_string(), "".to_string()).unwrap())]));
+	assert_eq!(pw.get_constraint_words(), Some(vec![]));
 
 	board.get_conditions::<NotTransposed, _>(6, 0, &mut pw);
-	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![8,9,10,11,12,13,14,15]));
+	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![]));
 	assert_eq!(pw.get_constraint_letters(), Some(Vec::<(u8, char)>::new()));
-	assert_eq!(pw.get_constraint_words(), Some(vec![(7, WordToFill::new("".to_string(), "arbre".to_string()).unwrap())]));
+	assert_eq!(pw.get_constraint_words(), Some(vec![]));
 
 	board.get_conditions::<NotTransposed, _>(11, 7, &mut pw);
 	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![0,1,2,3,4,5,6,7]));
@@ -363,7 +363,7 @@ fn get_conditions_horizontal() {
 	assert_eq!(pw.get_constraint_words(), Some(Vec::<(u8, WordToFill)>::new()));
 
 	board.get_conditions::<NotTransposed, _>(7, 0, &mut pw);
-	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![7,8,9,10]));
+	assert_eq!(pw.get_constraint_nb_letters(), Some(vec![7]));
 	assert_eq!(pw.get_constraint_letters(), Some(vec![(7, 'a'),(8, 'r'),(9, 'b'),(10, 'r'),(11, 'e')]));
 	assert_eq!(pw.get_constraint_words(), Some(Vec::<(u8, WordToFill)>::new()));
 

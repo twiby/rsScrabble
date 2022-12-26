@@ -431,3 +431,34 @@ fn get_score_errors() {
 	assert_eq!(Err(WordError::UnexpectedUnderscore), board.get_score::<NotTransposed>("tE_s_", 10, 5));
 	assert_eq!(Err(WordError::UnknownChar), board.get_score::<NotTransposed>("tE_s!", 10, 5));
 }
+
+use crate::solver;
+
+#[test]
+fn complete_test() {
+	let tree = str_tree::build_dict_from_file("src/test/words.txt").expect("File not found");
+
+	let mut str_board = "".to_string();
+	str_board.push_str("6__2___6___2__6");
+	str_board.push_str("_5___3___3___5_");
+	str_board.push_str("__5___2_2___5__");
+	str_board.push_str("2__5___2___5__2");
+	str_board.push_str("____5_____5____");
+	str_board.push_str("_3___3___3___3_");
+	str_board.push_str("__2___2_2___2__");
+	str_board.push_str("6__2___a___2__6");
+	str_board.push_str("__2___2r2___2__");
+	str_board.push_str("_3___3_be3___3_");
+	str_board.push_str("____5__R__5____");
+	str_board.push_str("2__5___e___5__2");
+	str_board.push_str("__5___2_2___5__");
+	str_board.push_str("_5___3___3___5_");
+	str_board.push_str("6__2___6___2__6");
+	let board = board::deserialize(&str_board).expect("Error when deserializing board message");
+
+	let mut bw = solver::find_best_word("", &board, &tree);
+	assert_eq!(bw, Ok(None));
+
+	bw = solver::find_best_word("arbre", &board, &tree);
+	assert_eq!(bw, Ok(Some(solver::BestWord{coord: (11, 3), word: "arbr_".to_string(), vertical: false, score: 12})));
+}

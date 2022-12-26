@@ -11,16 +11,17 @@ use pyo3::prelude::{pyclass, pymethods};
 type WordSearchResult = Result<Option<BestWord>, WordError>;
 
 #[derive(Debug)]
+#[derive(PartialEq)]
 #[pyclass]
 pub struct BestWord {
 	#[pyo3(get)]
-	vertical: bool,
+	pub vertical: bool,
 	#[pyo3(get)]
-	coord: (usize, usize),
+	pub coord: (usize, usize),
 	#[pyo3(get)]
-	word: String,
+	pub word: String,
 	#[pyo3(get)]
-	score: usize
+	pub score: usize
 }
 #[pymethods]
 impl BestWord {

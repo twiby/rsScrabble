@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 mod str_tree;
 use str_tree::Dictionnary;
 
@@ -6,6 +8,7 @@ mod board;
 mod constraints;
 
 mod solver;
+use solver::{WithoutTimer, WithTimer};
 
 fn main() {
 	let tree = match str_tree::build_dict_from_file("../pyScrabble/scrabbleWords.txt") {
@@ -59,5 +62,11 @@ fn main() {
 	str_board.push_str("6__2___6___2__6");
 
 	let board = board::deserialize(&str_board).expect("Error when deserializing board message");
-	println!("{:?}", solver::find_best_word("systeme", &board, tree_ref));
+	println!("{:?}", solver::find_best_word::<WithoutTimer, _, _>("systeme", &board, tree_ref));
+
+	use std::time::Instant;
+	let now = Instant::now();
+	println!("{:?}", solver::find_best_word::<WithTimer, _, _>("syste00", &board, tree_ref));
+	let elapsed = now.elapsed();
+	println!("Elapsed: {:.2?}", elapsed);
 }

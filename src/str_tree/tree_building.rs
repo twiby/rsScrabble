@@ -191,6 +191,7 @@ impl StrTree {
 
 		let length = current_word.len();
 
+		// Case the current node is supposed to complete a word on the board
 		match self.data {
 			None => (),
 			Some(c) => {

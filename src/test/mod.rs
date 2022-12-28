@@ -433,6 +433,7 @@ fn get_score_errors() {
 }
 
 use crate::solver;
+use crate::solver::WithoutTimer;
 
 #[test]
 fn complete_test() {
@@ -456,9 +457,9 @@ fn complete_test() {
 	str_board.push_str("6__2___6___2__6");
 	let board = board::deserialize(&str_board).expect("Error when deserializing board message");
 
-	let mut bw = solver::find_best_word("", &board, &tree);
+	let mut bw = solver::find_best_word::<WithoutTimer, _, _>("", &board, &tree);
 	assert_eq!(bw, Ok(None));
 
-	bw = solver::find_best_word("arbre", &board, &tree);
+	bw = solver::find_best_word::<WithoutTimer, _, _>("arbre", &board, &tree);
 	assert_eq!(bw, Ok(Some(solver::BestWord{coord: (11, 3), word: "arbr_".to_string(), vertical: false, score: 12})));
 }

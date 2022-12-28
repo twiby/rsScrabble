@@ -16,6 +16,7 @@ use board::WordError::*;
 
 mod solver;
 use solver::BestWord;
+use solver::WithoutTimer;
 
 use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
@@ -69,7 +70,7 @@ impl WordFinder {
 
 	fn get_best_play(&self, word: &str, board_msg: &str) -> PyResult<Option<BestWord>> {
 		let board = board::deserialize(board_msg)?;
-		let bw = solver::find_best_word(word, &board, &self._tree)?;
+		let bw = solver::find_best_word::<WithoutTimer, _, _>(word, &board, &self._tree)?;
 		return Ok(bw);
 	}
 }

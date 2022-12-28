@@ -55,11 +55,10 @@ impl Dictionnary for StrTree {
 		let mut obligatory_letters:[Option<char>; SIDE] = [None; SIDE];
 		let mut words_to_fill: [Option<(&StrTree, String)>; SIDE] = Default::default();
 		for i in 0..SIDE {
-			if nb_letters.valid() {
+			if nb_letters.decrease() {
 				valid_nb_letter[i] = true;
 				max_nb_letters = i;
 			}
-			nb_letters.decrease();
 			obligatory_letters[i] = letter_constraints.decrease();
 			words_to_fill[i] = self.get_next_word_to_fill(word_constraints.decrease('_'));
 		}

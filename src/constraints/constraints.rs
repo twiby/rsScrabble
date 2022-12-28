@@ -90,21 +90,15 @@ impl ConstraintNbLetters for CNbL {
 		match self {
 			None => true,
 			Some(ref mut vec) => {
-				if vec.last() == Some(&0) {
-					vec.pop();
-				}
+				let ret = match vec.last() {
+					Some(&0) => {vec.pop(); true}
+					_ => false
+				};
 				for el in vec.into_iter() {
 					*el -= 1;
 				}
-				!vec.is_empty()
+				ret
 			}
-		}
-	}
-
-	fn valid(&self) -> bool {
-		match self {
-			None => true,
-			Some(vec) => vec.last() == Some(&0)
 		}
 	}
 }

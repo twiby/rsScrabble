@@ -3,6 +3,20 @@ use crate::str_tree::{read_lines, cnt_lines};
 use crate::str_tree::Dictionnary;
 use crate::str_tree::{ConstraintNbLetters, ConstraintLetters, ConstraintWords};
 
+struct CurrentWord{
+	w: [char; SIDE],
+	l: usize
+}
+impl CurrentWord {
+	fn str(&self) -> String {
+		self.w.iter().take(self.l).collect()
+	}
+	fn push(&mut self, c: char) {
+		self.w[self.l] = c;
+		self.l += 1;
+	}
+}
+
 pub struct StrTree {
 	data: Option<char>,
 	is_word: bool,
@@ -63,10 +77,11 @@ impl Dictionnary for StrTree {
 			words_to_fill[i] = self.get_next_word_to_fill(word_constraints.decrease('_'));
 		}
 
+		let mut current_word_buf = CurrentWord{w: Default::default(), l: 0};
 		return self.get_anagrams_internal(
 			0,
 			letter_set_vec, 
-			"".to_string(), 
+			&mut current_word_buf, 
 			max_nb_letters, 
 			&valid_nb_letter, 
 			&obligatory_letters,
@@ -163,12 +178,6 @@ impl StrTree {
 		
 	}
 
-	fn new_word_with_append(word: &str, c: char) -> String {
-		let mut ret = word.to_string();
-		ret.push(c);
-		return ret;
-	}
-
 	fn get_next_word_to_fill<'a, 'b: 'a>(&'b self, wtf: Option<String>) -> Option<(&'a StrTree, String)> 
 	{
 		let binding = wtf?;
@@ -180,16 +189,15 @@ impl StrTree {
 	fn get_anagrams_internal(
 		&self, 
 		depth: usize,
-		letter_set: Vec<char>, 
-		current_word: String,
+		letter_set: Vec<char>,
+		current_word: &mut CurrentWord,
 		max_nb_letters: usize,
 		valid_nb_letter: &[bool; SIDE],
 		obligatory_letters: &[Option<char>; SIDE],
 		words_to_fill: &[Option<(&StrTree, String)>; SIDE])
 	-> Vec<String> {
-		let new_current_word = |c: char| Self::new_word_with_append(&current_word, c);
 
-		let length = current_word.len();
+		let length = current_word.l;
 
 		// Case the current node is supposed to complete a word on the board
 		match self.data {
@@ -215,10 +223,11 @@ impl StrTree {
 				None => return Vec::<String>::new(),
 				Some(node) => node 
 			};
+			current_word.push('_');
 			return node.get_anagrams_internal(
 				depth,
 				letter_set.clone(),
-				new_current_word('_'),
+				current_word,
 				max_nb_letters,
 				&valid_nb_letter,
 				&obligatory_letters,
@@ -226,7 +235,7 @@ impl StrTree {
 		}
 
 		let mut ret = Vec::<String>::new();
-		if self.is_word && valid_nb_letter[depth] { ret.push(current_word.clone()); }
+		if self.is_word && valid_nb_letter[depth] { ret.push(current_word.str()); }
 
 		// Case there is no higher up number of letters possible: exit
 		if depth >= max_nb_letters { return ret; }
@@ -234,15 +243,17 @@ impl StrTree {
 		// Case where there's at least one joker in set
 		if letter_set.first() == Some(&'0') {
 			for child in &self.children {
+				current_word.push(child.data.unwrap().to_ascii_uppercase());
 				ret.extend(
 					child.get_anagrams_internal(
 						depth + 1,
 						letter_set[1..].to_vec(), 
-						new_current_word(child.data.unwrap().to_ascii_uppercase()),
+						current_word,
 						max_nb_letters,
 						&valid_nb_letter,
 						&obligatory_letters,
 						&words_to_fill));
+				current_word.l = length;
 			}
 		}
 
@@ -255,15 +266,19 @@ impl StrTree {
 
 			match self.get_child(letter_set[i]) {
 				None => continue,
-				Some(node) => ret.extend(
-					node.get_anagrams_internal(
-						depth + 1,
-						[letter_set[0..i].to_vec(), letter_set[i+1..].to_vec()].concat(), 
-						new_current_word(node.data.unwrap()),
-						max_nb_letters,
-						&valid_nb_letter,
-						&obligatory_letters,
-						&words_to_fill))
+				Some(node) => {
+					current_word.push(node.data.unwrap());
+					ret.extend(
+						node.get_anagrams_internal(
+							depth + 1,
+							[letter_set[0..i].to_vec(), letter_set[i+1..].to_vec()].concat(), 
+							current_word,
+							max_nb_letters,
+							&valid_nb_letter,
+							&obligatory_letters,
+							&words_to_fill));
+					current_word.l = length;
+				}
 			};
 		}
 

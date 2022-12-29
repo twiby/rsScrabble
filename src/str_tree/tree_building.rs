@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use crate::board::SIDE;
 use crate::str_tree::{read_lines, cnt_lines};
 use crate::str_tree::Dictionnary;
@@ -80,7 +81,7 @@ impl Dictionnary for StrTree {
 		let mut current_word_buf = CurrentWord{w: Default::default(), l: 0};
 		return self.get_anagrams_internal(
 			0,
-			letter_set_vec, 
+			Cow::from(letter_set_vec), 
 			&mut current_word_buf, 
 			max_nb_letters, 
 			&valid_nb_letter, 
@@ -186,10 +187,22 @@ impl StrTree {
 		Some((&node, segments[1].to_string()))
 	}
 
+	fn clone_without(n: usize, vec: &Cow<[char]>) -> Vec<char> {
+		assert!(n<vec.len());
+		let mut ret = Vec::with_capacity(vec.len()-1);
+		for i in 0..n {
+			ret.push(vec[i]);
+		}
+		for i in (n+1)..vec.len() {
+			ret.push(vec[i]);
+		}
+		ret
+	}
+
 	fn get_anagrams_internal(
 		&self, 
 		depth: usize,
-		letter_set: Vec<char>,
+		letter_set: Cow<[char]>,
 		current_word: &mut CurrentWord,
 		max_nb_letters: usize,
 		valid_nb_letter: &[bool; SIDE],
@@ -226,7 +239,7 @@ impl StrTree {
 			current_word.push('_');
 			return node.get_anagrams_internal(
 				depth,
-				letter_set.clone(),
+				Cow::Borrowed(&letter_set),
 				current_word,
 				max_nb_letters,
 				&valid_nb_letter,
@@ -247,7 +260,7 @@ impl StrTree {
 				ret.extend(
 					child.get_anagrams_internal(
 						depth + 1,
-						letter_set[1..].to_vec(), 
+						Cow::Borrowed(&letter_set[1..]), 
 						current_word,
 						max_nb_letters,
 						&valid_nb_letter,
@@ -271,7 +284,7 @@ impl StrTree {
 					ret.extend(
 						node.get_anagrams_internal(
 							depth + 1,
-							[letter_set[0..i].to_vec(), letter_set[i+1..].to_vec()].concat(), 
+							Cow::from(Self::clone_without(i, &letter_set)), 
 							current_word,
 							max_nb_letters,
 							&valid_nb_letter,

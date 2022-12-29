@@ -71,6 +71,13 @@ impl WordFinder {
 		return self._tree.is_word(word);
 	}
 
+	fn get_best_first_play(&mut self, word: &str, board_msg: &str) -> PyResult<Option<BestWord>> {
+		let board = board::deserialize(board_msg)?;
+		let bw = solver::find_best_first_word(
+			word, &board, &self._tree, Some(&mut self._word_buffer))?;
+		return Ok(bw);
+	}
+
 	fn get_best_play(&mut self, word: &str, board_msg: &str) -> PyResult<Option<BestWord>> {
 		let board = board::deserialize(board_msg)?;
 		let bw = solver::find_best_word::<WithoutTimer, _, _>(

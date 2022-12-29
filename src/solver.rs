@@ -150,6 +150,44 @@ impl Timer for WithoutTimer {
 	}
 }
 
+pub fn find_best_first_word<B, D>(
+	letter_set: &str, 
+	board: &B, 
+	dict: &D,
+	mut words_buf_opt: Option<&mut Vec<StaticWord>>) 
+-> WordSearchResult
+where B: BoardService, D: Dictionnary {
+	let mut best_word:Option<BestWord> = None;
+
+	let mut small_buffer = str_tree::initiate_word_buf(1);
+	let words_buf = match words_buf_opt {
+		None => &mut small_buffer,
+		Some(ref mut wb) => wb
+	};
+
+	dict.get_anagrams(letter_set, words_buf, None, None, None);
+
+	let mut best_score = 0;
+	for y in 0..7 {
+		for word in &mut *words_buf {
+			if y + word.len() - 1 < 7 { continue; }
+			let score = board.get_score::<NotTransposed>(word.into_word(), 7, y)?;
+
+			if score > best_score {
+				best_score = score;
+				best_word = Some(BestWord{
+					vertical: false,
+					coord: (7, y),
+					word: word.str(),
+					score: best_score
+				});
+			}
+		}
+	}
+
+	return Ok(best_word)
+}
+
 pub fn find_best_word<T: Timer, B, D>(
 	letter_set: &str, 
 	board: &B, 

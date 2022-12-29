@@ -26,6 +26,9 @@ impl StaticWord {
 	pub fn into_word(&mut self) -> &mut [char] {
 		&mut self.w[0..self.l]
 	}
+	pub fn len(&self) -> usize {
+		self.l
+	}
 }
 
 pub fn initiate_word_buf(n: usize) -> Vec<StaticWord> {

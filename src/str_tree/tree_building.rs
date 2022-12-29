@@ -1,24 +1,7 @@
-use crate::board::SIDE;
+use crate::str_tree::SIDE;
 use crate::str_tree::{read_lines, cnt_lines};
-use crate::str_tree::Dictionnary;
+use crate::str_tree::{Dictionnary, StaticWord};
 use crate::str_tree::{ConstraintNbLetters, ConstraintLetters, ConstraintWords};
-
-struct StaticWord{
-	w: [char; SIDE],
-	l: usize
-}
-impl StaticWord {
-	fn str(&self) -> String {
-		self.w.iter().take(self.l).collect()
-	}
-	fn push(&mut self, c: char) {
-		self.w[self.l] = c;
-		self.l += 1;
-	}
-	fn into_word(&mut self) -> &mut [char] {
-		&mut self.w[0..self.l]
-	}
-}
 
 pub struct StrTree {
 	data: Option<char>,
@@ -56,10 +39,10 @@ impl Dictionnary for StrTree {
 	fn get_anagrams<CNbL, CL, CW>(
 		&self, 
 		letter_set: &str, 
+		words_buf: &mut Vec<StaticWord>,
 		mut nb_letters: CNbL,
 		mut letter_constraints: CL,
 		mut word_constraints: CW) 
-	-> Vec<String> 
 	where CNbL: ConstraintNbLetters, CL: ConstraintLetters, CW: ConstraintWords {
 		let mut letter_set_vec:Vec<char> = letter_set.chars().collect();
 		letter_set_vec.sort_unstable();
@@ -67,6 +50,7 @@ impl Dictionnary for StrTree {
 		letter_constraints.sort_and_fuse();
 		word_constraints.sort_and_fuse();
 
+		// We reformulate constraints in more memory efficient layouts
 		let mut max_nb_letters = 0;
 		let mut valid_nb_letter = [false; SIDE];
 		let mut obligatory_letters:[Option<char>; SIDE] = [None; SIDE];
@@ -86,14 +70,16 @@ impl Dictionnary for StrTree {
 			letter_set.push(*c);
 		}
 
-		return self.get_anagrams_internal(
+		words_buf.clear();
+		self.get_anagrams_internal(
 			0,
 			letter_set.into_word(), 
 			&mut current_word_buf, 
 			max_nb_letters, 
 			&valid_nb_letter, 
 			&obligatory_letters,
-			&words_to_fill);
+			&words_to_fill, 
+			words_buf);
 	}
 
 	fn add_word(&mut self, word: &str) {
@@ -202,8 +188,8 @@ impl StrTree {
 		max_nb_letters: usize,
 		valid_nb_letter: &[bool; SIDE],
 		obligatory_letters: &[Option<char>; SIDE],
-		words_to_fill: &[Option<(&StrTree, String)>; SIDE])
-	-> Vec<String> {
+		words_to_fill: &[Option<(&StrTree, String)>; SIDE],
+		words: &mut Vec<StaticWord>) {
 
 		let length = current_word.l;
 
@@ -220,7 +206,7 @@ impl StrTree {
 					}
 				};
 				if ret {
-					return Vec::<String>::new();
+					return;
 				}
 			}
 		};
@@ -228,7 +214,7 @@ impl StrTree {
 		// Case the next letter is a constraint: continue only on that branch if it exists
 		if let Some(constraint) = obligatory_letters[length] {
 			let node = match self.get_child(constraint) {
-				None => return Vec::<String>::new(),
+				None => return,
 				Some(node) => node 
 			};
 			current_word.push('_');
@@ -239,31 +225,31 @@ impl StrTree {
 				max_nb_letters,
 				&valid_nb_letter,
 				&obligatory_letters,
-				&words_to_fill);
+				&words_to_fill,
+				words);
 		}
 
-		let mut ret = Vec::<String>::new();
-		if self.is_word && valid_nb_letter[depth] { ret.push(current_word.str()); }
+		if self.is_word && valid_nb_letter[depth] { words.push(*current_word); }
 
 		// Case there is no higher up number of letters possible: exit
 		let set_size = letter_set.len();
 		if depth >= max_nb_letters || set_size == 0 {
-			return ret;
+			return;
 		}
 
 		// Case where there's at least one joker in set
 		if letter_set[0] == '0' {
 			for child in &self.children {
 				current_word.push(child.data.unwrap().to_ascii_uppercase());
-				ret.extend(
-					child.get_anagrams_internal(
-						depth + 1,
-						&mut letter_set[1..],
-						current_word,
-						max_nb_letters,
-						&valid_nb_letter,
-						&obligatory_letters,
-						&words_to_fill));
+				child.get_anagrams_internal(
+					depth + 1,
+					&mut letter_set[1..],
+					current_word,
+					max_nb_letters,
+					&valid_nb_letter,
+					&obligatory_letters,
+					&words_to_fill,
+					words);
 				current_word.l = length;
 			}
 		}
@@ -281,15 +267,15 @@ impl StrTree {
 				None => continue,
 				Some(node) => {
 					current_word.push(node.data.unwrap());
-					ret.extend(
-						node.get_anagrams_internal(
-							depth + 1,
-							&mut letter_set[1..],
-							current_word,
-							max_nb_letters,
-							&valid_nb_letter,
-							&obligatory_letters,
-							&words_to_fill));
+					node.get_anagrams_internal(
+						depth + 1,
+						&mut letter_set[1..],
+						current_word,
+						max_nb_letters,
+						&valid_nb_letter,
+						&obligatory_letters,
+						&words_to_fill,
+						words);
 					current_word.l = length;
 				}
 			};
@@ -298,7 +284,5 @@ impl StrTree {
 		let temp = letter_set[0];
 		for i in 0..set_size-1 { letter_set[i] = letter_set[i+1]; }
 		letter_set[set_size-1] = temp;
-
-		return ret;
 	}
 }

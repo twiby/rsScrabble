@@ -1,4 +1,5 @@
-use crate::str_tree::Dictionnary;
+use crate::str_tree;
+use crate::str_tree::{Dictionnary, StaticWord};
 
 use crate::board::BoardService;
 use crate::board::WordError;
@@ -59,6 +60,7 @@ fn _find_best_word_at<T, B, D>(
 	x: usize, y: usize, 
 	board: &B, 
 	dict: &D, 
+	words_buf: &mut Vec<StaticWord>,
 	pw: &mut PotentialWord, 
 	timer: &mut Option<&mut std::time::Duration>) 
 -> WordSearchResult
@@ -69,16 +71,21 @@ where B: BoardService, D: Dictionnary, T: TransposedState + TransposedBool {
 	board.get_conditions::<T, _>(x, y, pw);
 
 	let now = std::time::Instant::now();
-	let words = dict.get_anagrams(letter_set, pw.get_constraint_nb_letters(), pw.get_constraint_letters(), pw.get_constraint_words());
+	dict.get_anagrams(
+		letter_set, 
+		words_buf, 
+		pw.get_constraint_nb_letters(), 
+		pw.get_constraint_letters(), 
+		pw.get_constraint_words());
 	if let Some(timer_uw) = timer {
 		**timer_uw += now.elapsed();
 	}
 
-	for word in words {
-		let score = board.get_score::<T>(&word, x, y)?;
+	for word in words_buf {
+		let score = board.get_score::<T>(&word.str(), x, y)?;
 		if score > best_score {
 			best_score = score;
-			best_word = word.clone();
+			best_word = word.str();
 		}
 	}
 
@@ -98,12 +105,13 @@ fn find_best_word_at<B, D>(
 	x: usize, y: usize, 
 	board: &B, 
 	dict: &D, 
+	words_buf: &mut Vec<StaticWord>,
 	pw: &mut PotentialWord, 
 	timer: &mut Option<&mut std::time::Duration>) 
 -> WordSearchResult
 where B: BoardService, D: Dictionnary {
-	let bw_horizontal = _find_best_word_at::<NotTransposed, _, _>(letter_set, x, y, board, dict, pw, timer)?;
-	let bw_vertical = _find_best_word_at::<Transposed, _, _>(letter_set, x, y, board, dict, pw, timer)?;
+	let bw_horizontal = _find_best_word_at::<NotTransposed, _, _>(letter_set, x, y, board, dict, words_buf, pw, timer)?;
+	let bw_vertical = _find_best_word_at::<Transposed, _, _>(letter_set, x, y, board, dict, words_buf, pw, timer)?;
 	
 	match (&bw_horizontal, &bw_vertical) {
 		(None, None) => Ok(None),
@@ -145,18 +153,29 @@ impl Timer for WithoutTimer {
 pub fn find_best_word<T: Timer, B, D>(
 	letter_set: &str, 
 	board: &B, 
-	dict: &D) 
+	dict: &D,
+	mut words_buf_opt: Option<&mut Vec<StaticWord>>) 
 -> WordSearchResult
 where B: BoardService, D: Dictionnary {
 	let mut best_word:Option<BestWord> = None;
 	let mut pw = PotentialWord::new();
-	
+
+	let mut small_buffer = str_tree::initiate_word_buf(1);
+	let words_buf = match words_buf_opt {
+		None => &mut small_buffer,
+		Some(ref mut wb) => wb
+	};
+
 	let mut base_time = std::time::Instant::now().elapsed();
  	let mut timer = T::timer(&mut base_time);
 
 	for x in 0..crate::board::SIDE {
 		for y in 0..crate::board::SIDE {
-			if let Some(bw) = find_best_word_at(letter_set, x, y, board, dict, &mut pw, &mut timer)? {
+			if let Some(bw) = find_best_word_at(
+				letter_set, 
+				x, y, board, dict, 
+				words_buf, &mut pw, &mut timer)? {
+
 				best_word = match best_word {
 					None => Some(bw),
 					Some(ref word) => {
@@ -166,6 +185,7 @@ where B: BoardService, D: Dictionnary {
 							best_word
 						}
 					}
+
 				};
 			}
 		}

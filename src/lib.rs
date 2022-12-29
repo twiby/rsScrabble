@@ -47,7 +47,8 @@ impl From<DeserializingError> for pyo3::PyErr {
 
 #[pyclass]
 struct WordFinder {
-	_tree: str_tree::StrTree
+	_tree: str_tree::StrTree,
+	_word_buffer: Vec<str_tree::StaticWord>
 }
 
 #[pymethods]
@@ -55,9 +56,11 @@ impl WordFinder {
 	#[new]
 	fn new(filename: &str) -> PyResult<Self> {
 		match str_tree::build_dict_from_file(filename) {
-			Err(e) => return Err(PyErr::new::<PyValueError, _>(e)),
-			Ok(tree) => return Ok(WordFinder{_tree: tree})
-		};
+			Err(e) => Err(PyErr::new::<PyValueError, _>(e)),
+			Ok(tree) => Ok(WordFinder{
+				_tree: tree, 
+				_word_buffer: str_tree::initiate_word_buf(1000)})
+		}
 	}
 
 	fn add_word(&mut self, new_word: &str) {
@@ -68,9 +71,10 @@ impl WordFinder {
 		return self._tree.is_word(word);
 	}
 
-	fn get_best_play(&self, word: &str, board_msg: &str) -> PyResult<Option<BestWord>> {
+	fn get_best_play(&mut self, word: &str, board_msg: &str) -> PyResult<Option<BestWord>> {
 		let board = board::deserialize(board_msg)?;
-		let bw = solver::find_best_word::<WithoutTimer, _, _>(word, &board, &self._tree)?;
+		let bw = solver::find_best_word::<WithoutTimer, _, _>(
+			word, &board, &self._tree, Some(&mut self._word_buffer))?;
 		return Ok(bw);
 	}
 }

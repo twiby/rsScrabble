@@ -35,7 +35,7 @@ fn main() {
 	for n in 0..50 {
 		use std::time::Instant;
 		let now = Instant::now();
-		println!("{:?}", solver::find_best_word::<WithTimer, _, _>("syste00", &board, &tree));
+		println!("{:?}", solver::find_best_word::<WithTimer, _, _>("syste00", &board, &tree, None));
 		duration += now.elapsed();
 		println!("Elapsed: {:.2?}\n", duration/(n+1));
 	}

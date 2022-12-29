@@ -433,14 +433,14 @@ fn get_score() {
 
 	let board = board::deserialize(&str_board).expect("Error when deserializing board message");
 
-	assert_eq!(7, board.get_score::<NotTransposed>("te_se", 10, 5).unwrap());
-	assert_eq!(6, board.get_score::<NotTransposed>("tE_se", 10, 5).unwrap());
-	assert_eq!(3, board.get_score::<NotTransposed>("te_Se", 10, 5).unwrap());
-	assert_eq!(14, board.get_score::<NotTransposed>("te_ses", 10, 5).unwrap());
-	assert_eq!(8, board.get_score::<NotTransposed>("te_Ses", 10, 5).unwrap());
-	assert_eq!(32, board.get_score::<NotTransposed>("te_fes", 10, 5).unwrap());
-	assert_eq!(18, board.get_score::<Transposed>("messe", 9, 5).unwrap());
-	assert_eq!(124, board.get_score::<Transposed>("systeme", 9, 8).unwrap());
+	assert_eq!(7, board.get_score::<NotTransposed>(&['t','e','_','s','e'], 10, 5).unwrap());
+	assert_eq!(6, board.get_score::<NotTransposed>(&['t','E','_','s','e'], 10, 5).unwrap());
+	assert_eq!(3, board.get_score::<NotTransposed>(&['t','e','_','S','e'], 10, 5).unwrap());
+	assert_eq!(14, board.get_score::<NotTransposed>(&['t','e','_','s','e','s'], 10, 5).unwrap());
+	assert_eq!(8, board.get_score::<NotTransposed>(&['t','e','_','S','e','s'], 10, 5).unwrap());
+	assert_eq!(32, board.get_score::<NotTransposed>(&['t','e','_','f','e','s'], 10, 5).unwrap());
+	assert_eq!(18, board.get_score::<Transposed>(&['m','e','s','s','e'], 9, 5).unwrap());
+	assert_eq!(124, board.get_score::<Transposed>(&['s','y','s','t','e','m','e'], 9, 8).unwrap());
 }
 
 use crate::board::WordError;
@@ -466,9 +466,9 @@ fn get_score_errors() {
 
 	let board = board::deserialize(&str_board).expect("Error when deserializing board message");
 
-	assert_eq!(Err(WordError::TileOccupied), board.get_score::<NotTransposed>("terse", 10, 5));
-	assert_eq!(Err(WordError::UnexpectedUnderscore), board.get_score::<NotTransposed>("tE_s_", 10, 5));
-	assert_eq!(Err(WordError::UnknownChar), board.get_score::<NotTransposed>("tE_s!", 10, 5));
+	assert_eq!(Err(WordError::TileOccupied), board.get_score::<NotTransposed>(&['t','e','r','s','e'], 10, 5));
+	assert_eq!(Err(WordError::UnexpectedUnderscore), board.get_score::<NotTransposed>(&['t','E','_','s','_'], 10, 5));
+	assert_eq!(Err(WordError::UnknownChar), board.get_score::<NotTransposed>(&['t','E','_','s','!'], 10, 5));
 }
 
 use crate::solver;

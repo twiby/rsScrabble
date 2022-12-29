@@ -82,7 +82,7 @@ where B: BoardService, D: Dictionnary, T: TransposedState + TransposedBool {
 	}
 
 	for word in words_buf {
-		let score = board.get_score::<T>(&word.str(), x, y)?;
+		let score = board.get_score::<T>(word.into_word(), x, y)?;
 		if score > best_score {
 			best_score = score;
 			best_word = word.str();

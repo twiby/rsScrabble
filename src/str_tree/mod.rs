@@ -23,7 +23,7 @@ impl StaticWord {
 		self.w[self.l] = c;
 		self.l += 1;
 	}
-	fn into_word(&mut self) -> &mut [char] {
+	pub fn into_word(&mut self) -> &mut [char] {
 		&mut self.w[0..self.l]
 	}
 }

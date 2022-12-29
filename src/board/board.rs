@@ -111,14 +111,14 @@ impl BoardService for Board {
 		}
 	}
 
-	fn get_score<T: TransposedState>(&self, word: &str, x: usize, y: usize) -> Result<usize, WordError> {
+	fn get_score<T: TransposedState>(&self, word: &[char], x: usize, y: usize) -> Result<usize, WordError> {
 		let mut word_bonus: usize = 1;
 		let mut word_value: usize = 0;
 		let mut other_words_formed: usize = 0;
 
 		let mut nb_letters = 0;
 
-		for (c, relative_y) in word.chars().zip(0..word.len()) {
+		for (c, relative_y) in word.iter().zip(0..word.len()) {
 			let absolute_y = y + relative_y;
 			let mut local_letter_bonus = 1;
 			let mut local_word_bonus = 1;
@@ -132,18 +132,18 @@ impl BoardService for Board {
 				// Case of letter: there must be no letter on the board
 				(_, Board(EmptyTile)) => {
 					nb_letters += 1;
-					get_value(c)?
+					get_value(*c)?
 				},
 				(_, Board(LetterBonusTile(n))) => {
 					nb_letters += 1;
 					local_letter_bonus = n as usize;
-					local_letter_bonus * get_value(c)?
+					local_letter_bonus * get_value(*c)?
 				},
 				(_, Board(WordBonusTile(n))) => {
 					nb_letters += 1;
 					local_word_bonus = n as usize;
 					word_bonus *= local_word_bonus;
-					get_value(c)?
+					get_value(*c)?
 				}
 
 				(_,_) => return Err(TileOccupied)
@@ -154,8 +154,8 @@ impl BoardService for Board {
 				Err(_) => (),
 				Ok(word) => {
 					other_words_formed += 
-						local_word_bonus * get_str_value(&word.complete(c))? + 
-						(local_letter_bonus-1) * get_value(c)?;
+						local_word_bonus * get_str_value(&word.complete(*c))? + 
+						(local_letter_bonus-1) * get_value(*c)?;
 				}
 			};
 		}

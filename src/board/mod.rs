@@ -45,7 +45,7 @@ pub trait BoardService {
 	fn deserialize(message: &str) -> Result<Board, DeserializingError>;
 	fn get_conditions<T: transposition::TransposedState, PWCB>(&self, x: usize, y: usize, conditions: &mut PWCB)
 	where PWCB: PotentialWordConditionsBuilder;
-	fn get_score<T: transposition::TransposedState>(&self, word: &str, x: usize, y: usize) -> Result<usize, WordError>;
+	fn get_score<T: transposition::TransposedState>(&self, word: &[char], x: usize, y: usize) -> Result<usize, WordError>;
 }
 
 pub fn deserialize(message: &str) -> Result<Board, DeserializingError> {

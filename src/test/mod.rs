@@ -413,6 +413,39 @@ fn get_conditions_horizontal() {
 }
 
 #[test]
+fn word_conditions_on_boundary() {
+	let mut str_board = "".to_string();
+	str_board.push_str("6__2b__6___2__6");
+	str_board.push_str("_5__a3___3___5_");
+	str_board.push_str("__5_n_2_2___5__");
+	str_board.push_str("2__5c__2___5__2");
+	str_board.push_str("____5_____5____");
+	str_board.push_str("_3___3___3___3_");
+	str_board.push_str("__2___2_2___2__");
+	str_board.push_str("arbre__5___2__6");
+	str_board.push_str("__2___2_2___2__");
+	str_board.push_str("_3___3___3___3_");
+	str_board.push_str("____5_____5____");
+	str_board.push_str("2__5___2___5__2");
+	str_board.push_str("__5___2_2___5__");
+	str_board.push_str("_5___3___3___5_");
+	str_board.push_str("6__2___6___2__6");
+
+	let board = board::deserialize(&str_board).expect("Error when deserializing board message");
+	let mut pw = constraints::PotentialWord::new();
+
+	board.get_conditions::<NotTransposed, _>(4, 2, &mut pw);
+	assert_eq!(
+		pw.get_constraint_words(), 
+		Some(vec![(2, WordToFill::new("banc".to_string(), "".to_string()).unwrap())]));
+
+	board.get_conditions::<Transposed, _>(5, 6, &mut pw);
+	assert_eq!(
+		pw.get_constraint_words(), 
+		Some(vec![(1, WordToFill::new("arbre".to_string(), "".to_string()).unwrap())]));
+}
+
+#[test]
 fn get_score() {
 	let mut str_board = "".to_string();
 	str_board.push_str("6__2___6___2__6");

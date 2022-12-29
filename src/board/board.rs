@@ -188,7 +188,7 @@ impl Board {
 
 	fn get_above<T: TransposedState>(&self, x: usize, y: usize) -> String {
 		let mut above = "".to_string();
-		for xx in 1u8..(x as u8) {
+		for xx in 1u8..((x+1) as u8) {
 			match self.at::<T>(x-xx as usize, y).letter() {
 				Some(c) => above.push(c),
 				None => break

@@ -176,7 +176,7 @@ impl StrTree {
 	{
 		let binding = wtf?;
 		let segments:Vec<&str> = binding.split('_').collect();
-		let node = self.get_node(segments[0]).expect("Constraint word doesn't exist");
+		let node = self.get_node(segments[0]).expect(&format!("Constraint word doesn't exist: {}", segments[0]));
 		Some((&node, segments[1].to_string()))
 	}
 

@@ -1,20 +1,22 @@
-use std::borrow::Cow;
 use crate::board::SIDE;
 use crate::str_tree::{read_lines, cnt_lines};
 use crate::str_tree::Dictionnary;
 use crate::str_tree::{ConstraintNbLetters, ConstraintLetters, ConstraintWords};
 
-struct CurrentWord{
+struct StaticWord{
 	w: [char; SIDE],
 	l: usize
 }
-impl CurrentWord {
+impl StaticWord {
 	fn str(&self) -> String {
 		self.w.iter().take(self.l).collect()
 	}
 	fn push(&mut self, c: char) {
 		self.w[self.l] = c;
 		self.l += 1;
+	}
+	fn into_word(&mut self) -> &mut [char] {
+		&mut self.w[0..self.l]
 	}
 }
 
@@ -78,10 +80,15 @@ impl Dictionnary for StrTree {
 			words_to_fill[i] = self.get_next_word_to_fill(word_constraints.decrease('_'));
 		}
 
-		let mut current_word_buf = CurrentWord{w: Default::default(), l: 0};
+		let mut letter_set = StaticWord{w: Default::default(), l: 0};
+		let mut current_word_buf = StaticWord{w: Default::default(), l: 0};
+		for c in letter_set_vec.iter() {
+			letter_set.push(*c);
+		}
+
 		return self.get_anagrams_internal(
 			0,
-			Cow::from(letter_set_vec), 
+			letter_set.into_word(), 
 			&mut current_word_buf, 
 			max_nb_letters, 
 			&valid_nb_letter, 
@@ -187,23 +194,11 @@ impl StrTree {
 		Some((&node, segments[1].to_string()))
 	}
 
-	fn clone_without(n: usize, vec: &Cow<[char]>) -> Vec<char> {
-		assert!(n<vec.len());
-		let mut ret = Vec::with_capacity(vec.len()-1);
-		for i in 0..n {
-			ret.push(vec[i]);
-		}
-		for i in (n+1)..vec.len() {
-			ret.push(vec[i]);
-		}
-		ret
-	}
-
 	fn get_anagrams_internal(
 		&self, 
 		depth: usize,
-		letter_set: Cow<[char]>,
-		current_word: &mut CurrentWord,
+		letter_set: &mut [char],
+		current_word: &mut StaticWord,
 		max_nb_letters: usize,
 		valid_nb_letter: &[bool; SIDE],
 		obligatory_letters: &[Option<char>; SIDE],
@@ -239,7 +234,7 @@ impl StrTree {
 			current_word.push('_');
 			return node.get_anagrams_internal(
 				depth,
-				Cow::Borrowed(&letter_set),
+				letter_set,
 				current_word,
 				max_nb_letters,
 				&valid_nb_letter,
@@ -251,16 +246,19 @@ impl StrTree {
 		if self.is_word && valid_nb_letter[depth] { ret.push(current_word.str()); }
 
 		// Case there is no higher up number of letters possible: exit
-		if depth >= max_nb_letters { return ret; }
+		let set_size = letter_set.len();
+		if depth >= max_nb_letters || set_size == 0 {
+			return ret;
+		}
 
 		// Case where there's at least one joker in set
-		if letter_set.first() == Some(&'0') {
+		if letter_set[0] == '0' {
 			for child in &self.children {
 				current_word.push(child.data.unwrap().to_ascii_uppercase());
 				ret.extend(
 					child.get_anagrams_internal(
 						depth + 1,
-						Cow::Borrowed(&letter_set[1..]), 
+						&mut letter_set[1..],
 						current_word,
 						max_nb_letters,
 						&valid_nb_letter,
@@ -271,20 +269,22 @@ impl StrTree {
 		}
 
 		// Now take every letter in the set, and see if you can build a word from it
-		for i in 0..letter_set.len() {
+		for i in 0..set_size {
 			// This avoids repetition coming from identitical letters
-			if i > 0 && letter_set[i-1]==letter_set[i] {
+			if i > 0 && letter_set[0] == letter_set[i] {
 				continue;
 			}
 
-			match self.get_child(letter_set[i]) {
+			letter_set.swap(0, i);
+
+			match self.get_child(letter_set[0]) {
 				None => continue,
 				Some(node) => {
 					current_word.push(node.data.unwrap());
 					ret.extend(
 						node.get_anagrams_internal(
 							depth + 1,
-							Cow::from(Self::clone_without(i, &letter_set)), 
+							&mut letter_set[1..],
 							current_word,
 							max_nb_letters,
 							&valid_nb_letter,
@@ -294,6 +294,10 @@ impl StrTree {
 				}
 			};
 		}
+
+		let temp = letter_set[0];
+		for i in 0..set_size-1 { letter_set[i] = letter_set[i+1]; }
+		letter_set[set_size-1] = temp;
 
 		return ret;
 	}

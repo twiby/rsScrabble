@@ -76,7 +76,7 @@ where B: BoardService, D: Dictionnary, T: TransposedState + TransposedBool {
 		words_buf, 
 		pw.get_constraint_nb_letters(), 
 		pw.get_constraint_letters(), 
-		pw.get_constraint_words());
+		pw.get_constraint_words())?;
 	if let Some(timer_uw) = timer {
 		**timer_uw += now.elapsed();
 	}
@@ -165,7 +165,7 @@ where B: BoardService, D: Dictionnary {
 		Some(ref mut wb) => wb
 	};
 
-	dict.get_anagrams(letter_set, words_buf, None, None, None);
+	dict.get_anagrams(letter_set, words_buf, None, None, None)?;
 
 	let mut best_score = 0;
 	for y in 0..7 {

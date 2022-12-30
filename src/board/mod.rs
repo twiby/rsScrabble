@@ -13,16 +13,17 @@ pub const SIZE: usize = SIDE * SIDE;
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub enum DeserializingError {
-	UnknownSymbol,
-	WrongLength
+	UnknownSymbol(String),
+	WrongLength(String)
 }
 
 #[derive(Debug)]
 #[derive(PartialEq)]
 pub enum WordError {
-	TileOccupied,
-	UnexpectedUnderscore,
-	UnknownChar
+	TileOccupied(String),
+	UnexpectedUnderscore(String),
+	UnknownChar(String),
+	UnknownConstraint(String)
 } 
 
 pub mod transposition

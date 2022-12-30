@@ -21,26 +21,33 @@ use solver::WithoutTimer;
 use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
 
-fn py_value_error(msg: &str) -> pyo3::PyErr {
-	PyErr::new::<PyValueError, _>(msg.to_string())
+trait ErrorTypeToString { fn str() -> String; }
+fn py_value_error<ErrorType: ErrorTypeToString>(msg: &str) -> pyo3::PyErr {
+	let mut string = ErrorType::str();
+	string.push_str(": ");
+	string.push_str(msg);
+	PyErr::new::<PyValueError, _>(string)
 }
 
 // TODO: these error messages should be with the classe declaration and flow more naturally in PyErr
+impl ErrorTypeToString for WordError { fn str() -> String {"WordError".to_string()} }
 impl From<WordError> for pyo3::PyErr {
 	fn from(e: WordError) -> Self {
 		match e {
-			TileOccupied => py_value_error("Solver: tile occupied"),
-			UnknownChar => py_value_error("Solver: unknown char"),
-			UnexpectedUnderscore => py_value_error("Solver: unexpected underscore")
+			TileOccupied(s) => py_value_error::<WordError>(&s),
+			UnknownChar(s) => py_value_error::<WordError>(&s),
+			UnexpectedUnderscore(s) => py_value_error::<WordError>(&s),
+			UnknownConstraint(s) => py_value_error::<WordError>(&s)
 		}
 	}
 }
 
+impl ErrorTypeToString for DeserializingError { fn str() -> String {"DeserializingError".to_string()} }
 impl From<DeserializingError> for pyo3::PyErr {
 	fn from(e: DeserializingError) -> Self {
 		match e {
-			WrongLength => py_value_error("Deserialization: board message has wrong length"),
-			UnknownSymbol => py_value_error("Deserialization: board message has non valid char")
+			WrongLength(s) => py_value_error::<DeserializingError>(&s),
+			UnknownSymbol(s) => py_value_error::<DeserializingError>(&s)
 		}
 	}
 }

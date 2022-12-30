@@ -2,6 +2,7 @@ use crate::str_tree::SIDE;
 use crate::str_tree::{read_lines, cnt_lines};
 use crate::str_tree::{Dictionnary, StaticWord};
 use crate::str_tree::{ConstraintNbLetters, ConstraintLetters, ConstraintWords};
+use crate::str_tree::WordError;
 
 pub struct StrTree {
 	data: Option<char>,
@@ -43,7 +44,7 @@ impl Dictionnary for StrTree {
 		mut nb_letters: CNbL,
 		mut letter_constraints: CL,
 		mut word_constraints: CW) 
-	where CNbL: ConstraintNbLetters, CL: ConstraintLetters, CW: ConstraintWords {
+	 -> Result<(), WordError> where CNbL: ConstraintNbLetters, CL: ConstraintLetters, CW: ConstraintWords {
 		let mut letter_set_vec:Vec<char> = letter_set.chars().collect();
 		letter_set_vec.sort_unstable();
 		nb_letters.sort_and_fuse();
@@ -61,7 +62,7 @@ impl Dictionnary for StrTree {
 				max_nb_letters = i;
 			}
 			obligatory_letters[i] = letter_constraints.decrease();
-			words_to_fill[i] = self.get_next_word_to_fill(word_constraints.decrease('_'));
+			words_to_fill[i] = self.get_next_word_to_fill(word_constraints.decrease('_'))?;
 		}
 
 		let mut letter_set = StaticWord{w: Default::default(), l: 0};
@@ -80,6 +81,7 @@ impl Dictionnary for StrTree {
 			&obligatory_letters,
 			&words_to_fill, 
 			words_buf);
+		Ok(())
 	}
 
 	fn add_word(&mut self, word: &str) {
@@ -172,12 +174,16 @@ impl StrTree {
 		
 	}
 
-	fn get_next_word_to_fill<'a, 'b: 'a>(&'b self, wtf: Option<String>) -> Option<(&'a StrTree, String)> 
+	fn get_next_word_to_fill<'a, 'b: 'a>(&'b self, wtf: Option<String>) -> Result<Option<(&'a StrTree, String)>, WordError>
 	{
-		let binding = wtf?;
+		if wtf.is_none() { return Ok(None); }
+		let binding = wtf.unwrap();
 		let segments:Vec<&str> = binding.split('_').collect();
-		let node = self.get_node(segments[0]).expect(&format!("Constraint word doesn't exist: {}", segments[0]));
-		Some((&node, segments[1].to_string()))
+		let node = match self.get_node(segments[0]) {
+			Some(node) => node,
+			None => return Err(WordError::UnknownConstraint(format!("Constraint word doesn't exist: {}", segments[0])))
+		};
+		Ok(Some((&node, segments[1].to_string())))
 	}
 
 	fn get_anagrams_internal(

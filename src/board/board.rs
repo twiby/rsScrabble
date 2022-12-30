@@ -54,14 +54,14 @@ impl BoardService for Board {
 					} else if c.is_ascii_uppercase() {
 						Played(JokerTile(c.to_ascii_lowercase()) )
 					} else { 
-						return Err(UnknownSymbol); 
+						return Err(UnknownSymbol("deserialize: unknown symbol".to_string())); 
 					}
 				}
 			};
 			tile_nb += 1;
 		}
 		if tile_nb != SIZE {
-			return Err(WrongLength);
+			return Err(WrongLength("deserialize: wrong length".to_string()));
 		}
 
 		return Ok(board);
@@ -127,7 +127,7 @@ impl BoardService for Board {
 				// Case of constraint: there must be a letter on the board
 				('_', Played(JokerTile(_))) => {0; continue},
 				('_', Played(LetterTile(c2))) => {get_value_lowercase(c2); continue},
-				('_', _) => return Err(UnexpectedUnderscore),
+				('_', _) => return Err(UnexpectedUnderscore("get_score: unexpected void".to_string())),
 
 				// Case of letter: there must be no letter on the board
 				(_, Board(EmptyTile)) => {
@@ -146,7 +146,7 @@ impl BoardService for Board {
 					get_value(*c)?
 				}
 
-				(_,_) => return Err(TileOccupied)
+				(_,_) => return Err(TileOccupied("get_score: Tile occupied".to_string()))
 			};
 
 			// Find letters above and/or below: a word filled

@@ -11,7 +11,7 @@ pub fn get_value(c: char) -> Result<usize, WordError> {
 	} else if c.is_ascii_uppercase() {
 		Ok(0)
 	} else {
-		Err(UnknownChar)
+		Err(UnknownChar("get_value: unknown char".to_string()))
 	}
 }
 pub fn get_str_value(word: &str) -> Result<usize, WordError> {

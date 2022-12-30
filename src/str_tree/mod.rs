@@ -6,6 +6,7 @@ mod tree_building;
 pub use tree_building::StrTree;
 
 pub use crate::board::SIDE;
+pub use crate::board::WordError;
 pub use crate::constraints::{ConstraintNbLetters, ConstraintLetters, ConstraintWords};
 
 #[derive(Copy)]
@@ -45,7 +46,7 @@ pub trait Dictionnary {
 		nb_letter: CNbL, 
 		letter_constraints: CL, 
 		word_constraint: CW)
-	where CNbL: ConstraintNbLetters, CL: ConstraintLetters, CW: ConstraintWords;
+	-> Result<(), WordError> where CNbL: ConstraintNbLetters, CL: ConstraintLetters, CW: ConstraintWords;
 
 	fn add_word(&mut self, new_word: &str);
 	fn is_word(&self, word: &str) -> bool;

@@ -8,7 +8,7 @@ fn to_string_vec(words: &Vec<StaticWord>) -> Vec<String> {
 fn get_anagrams(letters: &str) -> Vec<String> {
 	let tree = str_tree::build_dict_from_file("src/test/words.txt").expect("File not found");
 	let mut vec = str_tree::initiate_word_buf(0);
-	tree.get_anagrams(letters, &mut vec, None, None, None);
+	tree.get_anagrams(letters, &mut vec, None, None, None).unwrap();
 	to_string_vec(&vec)
 }
 
@@ -124,23 +124,23 @@ fn nb_letters_constraints() {
 
 	let mut words = str_tree::initiate_word_buf(0);
 
-	tree.get_anagrams("arbre", &mut words, Some(vec![]), None, None);
+	tree.get_anagrams("arbre", &mut words, Some(vec![]), None, None).unwrap();
 	assert!(unordered_equal(
 		&to_string_vec(&words), 
 		&Vec::<String>::new()));
 
-	tree.get_anagrams("arbre", &mut words, Some(vec![3]), None, None);
+	tree.get_anagrams("arbre", &mut words, Some(vec![3]), None, None).unwrap();
 	assert!(unordered_equal(
 		&to_string_vec(&words), 
 		&vec!["bar".to_string()]));
 
-	tree.get_anagrams("arbre", &mut words, Some(vec![5]), None, None);
+	tree.get_anagrams("arbre", &mut words, Some(vec![5]), None, None).unwrap();
 	assert!(unordered_equal(
 		&to_string_vec(&words), 
 		&correct_answer));
 
 	correct_answer.push("bar".to_string());
-	tree.get_anagrams("arbre", &mut words, Some(vec![3, 5]), None, None);
+	tree.get_anagrams("arbre", &mut words, Some(vec![3, 5]), None, None).unwrap();
 	assert!(unordered_equal(
 		&to_string_vec(&words), 
 		&correct_answer));
@@ -153,11 +153,11 @@ fn no_letter_actually_used() {
 
 	let mut words = str_tree::initiate_word_buf(0);
 
-	tree.get_anagrams("", &mut words, Some(vec![0]), None, None);
+	tree.get_anagrams("", &mut words, Some(vec![0]), None, None).unwrap();
 	assert!(unordered_equal(
 		&to_string_vec(&words), 
 		empty));
-	tree.get_anagrams("", &mut words, Some(vec![0]), Some(vec![(0, 'b'), (1, 'a'), (2, 'r')]), None);
+	tree.get_anagrams("", &mut words, Some(vec![0]), Some(vec![(0, 'b'), (1, 'a'), (2, 'r')]), None).unwrap();
 	assert!(unordered_equal(
 		&to_string_vec(&words), 
 		empty));
@@ -172,7 +172,7 @@ fn nb_letters_does_not_include_constraints() {
 
 	let mut words = str_tree::initiate_word_buf(0);
 
-	tree.get_anagrams("re", &mut words, Some(vec![2]), Some(vec![(0, 'b'), (1, 'a'), (2, 'r')]), None);
+	tree.get_anagrams("re", &mut words, Some(vec![2]), Some(vec![(0, 'b'), (1, 'a'), (2, 'r')]), None).unwrap();
 	assert!(unordered_equal(
 		&to_string_vec(&words), 
 		&correct_answer));
@@ -184,27 +184,27 @@ fn letters_constraints() {
 
 	let mut words = str_tree::initiate_word_buf(0);
 
-	tree.get_anagrams("arbe", &mut words, None, Some(vec![(2, 'z')]), None);
+	tree.get_anagrams("arbe", &mut words, None, Some(vec![(2, 'z')]), None).unwrap();
 	assert!(unordered_equal(
 		&to_string_vec(&words), 
 		&Vec::<String>::new()));
 
-	tree.get_anagrams("rbre", &mut words, None, Some(vec![(0, 'a')]), None);
+	tree.get_anagrams("rbre", &mut words, None, Some(vec![(0, 'a')]), None).unwrap();
 	assert!(unordered_equal(
 		&to_string_vec(&words), 
 		&vec!["_rbre".to_string()]));
-	tree.get_anagrams("arbe", &mut words, None, Some(vec![(1, 'r')]), None);
+	tree.get_anagrams("arbe", &mut words, None, Some(vec![(1, 'r')]), None).unwrap();
 	assert!(unordered_equal(
 		&to_string_vec(&words), 
 		&vec!["a_bre".to_string()]));
 
-	tree.get_anagrams("arbe", &mut words, None, Some(vec![(3, 'r')]), None);
+	tree.get_anagrams("arbe", &mut words, None, Some(vec![(3, 'r')]), None).unwrap();
 	println!("{:?}", words);
 	assert!(unordered_equal(
 		&to_string_vec(&words), 
 		&vec!["arb_e".to_string(), "bar_e".to_string()]));
 
-	tree.get_anagrams("arbr", &mut words, None, Some(vec![(4, 'e')]), None);
+	tree.get_anagrams("arbr", &mut words, None, Some(vec![(4, 'e')]), None).unwrap();
 	assert!(unordered_equal(
 		&to_string_vec(&words), 
 		&vec!["arbr_".to_string(), "barr_".to_string(), "bar".to_string()]));
@@ -220,7 +220,7 @@ fn words_constraint() {
 		"bar".to_string()
 	];
 	let mut constraints = Some(vec![(2, crate::constraints::WordToFill::new("ba".to_string(),"re".to_string()).unwrap())]);
-	tree.get_anagrams("arbre", &mut words, Some(vec![2, 3]), None, constraints.clone());
+	tree.get_anagrams("arbre", &mut words, Some(vec![2, 3]), None, constraints.clone()).unwrap();
 	assert!(unordered_equal(
 		&to_string_vec(&words), 
 		&correct_answer));
@@ -230,7 +230,7 @@ fn words_constraint() {
 		"bar".to_string()
 	];
 	constraints = Some(vec![(2, crate::constraints::WordToFill::new("ba".to_string(),"re".to_string()).unwrap())]);
-	tree.get_anagrams("arbre", &mut words, None, None, constraints.clone());
+	tree.get_anagrams("arbre", &mut words, None, None, constraints.clone()).unwrap();
 	assert!(unordered_equal(
 		&to_string_vec(&words), 
 		&correct_answer));
@@ -239,7 +239,7 @@ fn words_constraint() {
 		"arbre".to_string()
 	];
 	constraints = Some(vec![(2, crate::constraints::WordToFill::new("ar".to_string(),"re".to_string()).unwrap())]);
-	tree.get_anagrams("arbre", &mut words, None, None, constraints.clone());
+	tree.get_anagrams("arbre", &mut words, None, None, constraints.clone()).unwrap();
 	assert!(unordered_equal(
 		&to_string_vec(&words), 
 		&correct_answer));
@@ -258,7 +258,7 @@ fn all_constraints() {
 		&mut words,
 		Some(vec![2]), 
 		Some(vec![(1, 'a')]), 
-		Some(vec![(2, crate::constraints::WordToFill::new("a".to_string(), "bre".to_string()).unwrap())]));
+		Some(vec![(2, crate::constraints::WordToFill::new("a".to_string(), "bre".to_string()).unwrap())])).unwrap();
 	assert!(unordered_equal(
 		&to_string_vec(&words), 
 		&correct_answer));
@@ -270,7 +270,7 @@ fn all_constraints() {
 		&mut words,
 		None, 
 		Some(vec![(1, 'a')]), 
-		Some(Vec::<(u8, crate::constraints::WordToFill)>::new()));
+		Some(Vec::<(u8, crate::constraints::WordToFill)>::new())).unwrap();
 	assert!(unordered_equal(
 		&to_string_vec(&words), 
 		&correct_answer));
@@ -280,7 +280,7 @@ fn all_constraints() {
 		&mut words,
 		None, 
 		Some(vec![(1, 'a')]), 
-		None);
+		None).unwrap();
 	assert!(unordered_equal(
 		&to_string_vec(&words), 
 		&correct_answer));
@@ -315,10 +315,17 @@ fn board_serialization() {
 	str_board.push_str("6__2___6___2__");
 
 	let b = board::deserialize(&str_board).expect_err("Unlikely Success");
-	assert_eq!(b, DeserializingError::WrongLength);
+	match b {
+		DeserializingError::WrongLength(_) => (),
+		_ => panic!("Wrong error type")
+	}
+
 	str_board.push('!');
 	let b2 = board::deserialize(&str_board).expect_err("Unlikely success");
-	assert_eq!(b2, DeserializingError::UnknownSymbol);
+	match b2 {
+		DeserializingError::UnknownSymbol(_) => (),
+		_ => panic!("Wrong error type")
+	}
 }
 
 #[test]
@@ -499,9 +506,20 @@ fn get_score_errors() {
 
 	let board = board::deserialize(&str_board).expect("Error when deserializing board message");
 
-	assert_eq!(Err(WordError::TileOccupied), board.get_score::<NotTransposed>(&['t','e','r','s','e'], 10, 5));
-	assert_eq!(Err(WordError::UnexpectedUnderscore), board.get_score::<NotTransposed>(&['t','E','_','s','_'], 10, 5));
-	assert_eq!(Err(WordError::UnknownChar), board.get_score::<NotTransposed>(&['t','E','_','s','!'], 10, 5));
+	match board.get_score::<NotTransposed>(&['t','e','r','s','e'], 10, 5) {
+		Err(WordError::TileOccupied(_)) => (),
+		_ => panic!("Wrong error type")
+	};
+
+	match board.get_score::<NotTransposed>(&['t','E','_','s','_'], 10, 5) {
+		Err(WordError::UnexpectedUnderscore(_)) => (),
+		_ => panic!("Wrong error type")
+	}
+
+	match board.get_score::<NotTransposed>(&['t','E','_','s','!'], 10, 5) {
+		Err(WordError::UnknownChar(_)) => (),
+		_ => panic!("Wrong error type")
+	}
 }
 
 use crate::solver;
@@ -534,4 +552,33 @@ fn complete_test() {
 
 	bw = solver::find_best_word::<WithoutTimer, _, _>("arbre", &board, &tree, None);
 	assert_eq!(bw, Ok(Some(solver::BestWord{coord: (11, 3), word: "arbr_".to_string(), vertical: false, score: 12})));
+}
+
+#[test]
+fn complete_test_error() {
+	let tree = str_tree::build_dict_from_file("src/test/words.txt").expect("File not found");
+
+	let mut str_board = "".to_string();
+	str_board.push_str("6__2___6___2__6");
+	str_board.push_str("_5___3___3___5_");
+	str_board.push_str("__5___2_2___5__");
+	str_board.push_str("2__5___2___5__2");
+	str_board.push_str("____5_____5____");
+	str_board.push_str("_3___3___3___3_");
+	str_board.push_str("__2___2_2___2__");
+	str_board.push_str("6__2___a___2__6");
+	str_board.push_str("__2___2r2___2__");
+	str_board.push_str("_3___3_be3___3_");
+	str_board.push_str("____5__R__5____");
+	str_board.push_str("2__5___z___5__2");
+	str_board.push_str("__5___2_2___5__");
+	str_board.push_str("_5___3___3___5_");
+	str_board.push_str("6__2___6___2__6");
+	let board = board::deserialize(&str_board).expect("Error when deserializing board message");
+
+	let bw = solver::find_best_word::<WithoutTimer, _, _>("arbre", &board, &tree, None);
+	match bw {
+		Err(WordError::UnknownConstraint(_)) => (),
+		_ => panic!("Wrong error type")
+	}
 }
